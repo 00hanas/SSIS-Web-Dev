@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "@/components/mode-toggle"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
+import { Button } from "@/components/ui/button"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,19 @@ export default function RootLayout({
                   <SidebarTrigger />
                   <h1 className="text-xl font-bold">Student Information System</h1>
                 </div>
+                <div className="flex items-center gap-2">
+                <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
+                  <a
+                    href="https://github.com/00hanas/SSIS-Web-Dev"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    className="dark:text-foreground"
+                  >
+                    GitHub
+                  </a>
+                </Button>
                 <ModeToggle />
+              </div>
               </header>
               <main className="p-4">
                 {children}
