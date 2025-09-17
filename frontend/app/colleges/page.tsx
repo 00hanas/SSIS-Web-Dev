@@ -1,10 +1,22 @@
+"use client"
+
 import { CardDemographic } from "@/components/cards"
 import { CollegeColumns, College } from "../table/college-columns"
 import { DataTable } from "../table/data-table"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { SearchSharp as SearchIcon } from '@mui/icons-material'
 
-async function getData(): Promise<College[]> {
+const mockData: College[] = [
   // Mock college data
-  return [
     { ccode: "CCS", name: "College of Computer Studies" },
     { ccode: "CAS", name: "College of Arts and Sciences" },
     { ccode: "CBA", name: "College of Business Administration" },
@@ -30,21 +42,73 @@ async function getData(): Promise<College[]> {
     { ccode: "CJOUR", name: "College of Journalism" },
     { ccode: "CIS", name: "College of Information Systems" },
     { ccode: "CMAR", name: "College of Maritime Studies" },
-  ]
-}
+]
 
+export default function CollegesPage() {
+  const [search, setSearch] = useState("")
+  const [searchBy, setSearchBy] = useState<"all" | "ccode" | "name">("all")
 
-export default async function CollegesPage() {
-  const data = await getData()
-
+   const filteredData = mockData.filter((college) => {
+    if (searchBy === "all") {
+      return Object.values(college)
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    }
+    return college[searchBy].toLowerCase().includes(search.toLowerCase())
+  })
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-1">
       <CardDemographic colleges={5} programs={12} students={300} />
 
-      <h2 className="text-2xl font-bold mt-6">Colleges</h2>
-      <p className="mb-6">Here’s the list of colleges.</p>
+      <div>
+        <div className="flex items-center justify-between mb-4 mt-6">
+          <div>
+            <h2 className="text-2xl font-bold">Colleges</h2>
+            <p className="text-muted-foreground">
+              Here’s the list of colleges.
+            </p>
+          </div>
+        </div>
 
-      <DataTable columns={CollegeColumns} data={data} />
+        <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+                <div className="relative max-w-sm">
+                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                    placeholder="Search colleges..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-8" 
+                />
+                </div>
+          <Select
+            value={searchBy}
+            onValueChange={(value) => setSearchBy(value as "all" | "ccode" | "name")}
+            >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Search by</SelectItem>
+              <SelectItem value="ccode">College Code</SelectItem>
+              <SelectItem value="name">College Name</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button
+            variant="default"
+            size="sm"
+            onClick={() => console.log("Add college")}
+          >
+            Add College
+          </Button>
+          </div>
+
+        <DataTable columns={CollegeColumns} data={filteredData} />
+      </div>
     </div>
   )
 }
+
