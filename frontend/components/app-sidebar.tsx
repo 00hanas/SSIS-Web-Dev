@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
+
 import {
   School as CollegeIcon,
   LibraryBooks as ProgramIcon,
@@ -39,26 +41,35 @@ const items = [
 
 export function AppSidebar() {
     const { open } = useSidebar()
+    const pathname = usePathname()
+
   return (
     <Sidebar collapsible="icon" className="data-[collapsible=icon]:w-20">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a
-                      href={item.href}
-                      className="flex items-center gap-2"
-                      title={!open ? item.title : undefined}
-                    >
-                      <item.icon fontSize="small" />
-                      {open && <span>{item.title}</span>}
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = pathname.startsWith(item.href)
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <a
+                        href={item.href}
+                        className={`flex items-center gap-2 rounded transition-colors ${
+                          isActive
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : "hover:bg-muted"
+                        }`}
+                        title={!open ? item.title : undefined}
+                      >
+                        <item.icon fontSize="small" />
+                        {open && <span>{item.title}</span>}
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
