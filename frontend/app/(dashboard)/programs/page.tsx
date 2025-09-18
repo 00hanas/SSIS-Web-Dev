@@ -1,8 +1,8 @@
 "use client"
 
 import { CardDemographic } from "@/components/cards"
-import { ProgramColumns, Program } from "../table/programs-columns"
-import { DataTable } from "../table/data-table"
+import { ProgramColumns, Program } from "../../table/programs-columns"
+import { DataTable } from "../../table/data-table"
 import { AddProgramDialog } from "./add-dialog"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"

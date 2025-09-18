@@ -1,8 +1,8 @@
 "use client"
 
 import { CardDemographic } from "@/components/cards"
-import { CollegeColumns, College } from "../table/college-columns"
-import { DataTable } from "../table/data-table"
+import { CollegeColumns, College } from "../../table/college-columns"
+import { DataTable } from "../../table/data-table"
 import { AddCollegeDialog } from "./add-dialog"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"

@@ -3,8 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { EditProgramDialog } from "../programs/edit-dialog"
-import { DeleteProgramDialog } from "../programs/delete-confirmation"
+import { EditProgramDialog } from "../(dashboard)/programs/edit-dialog"
+import { DeleteProgramDialog } from "../(dashboard)/programs/delete-confirmation"
 import {
   DropdownMenu,
   DropdownMenuContent,
