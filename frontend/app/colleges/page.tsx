@@ -3,7 +3,7 @@
 import { CardDemographic } from "@/components/cards"
 import { CollegeColumns, College } from "../table/college-columns"
 import { DataTable } from "../table/data-table"
-import { Button } from "@/components/ui/button"
+import { AddCollegeDialog } from "./add-dialog"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import {
@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select"
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
 
-const mockData: College[] = [
+//to be replaced with actual data fetching logic
+ export const mockData: College[] = [
   // Mock college data
     { ccode: "CCS", name: "College of Computer Studies" },
     { ccode: "CAS", name: "College of Arts and Sciences" },
@@ -97,13 +98,7 @@ export default function CollegesPage() {
           </Select>
         </div>
 
-        <Button
-            variant="default"
-            size="sm"
-            onClick={() => console.log("Add college")}
-          >
-            Add College
-          </Button>
+        <AddCollegeDialog />
           </div>
 
         <DataTable columns={CollegeColumns} data={filteredData} />

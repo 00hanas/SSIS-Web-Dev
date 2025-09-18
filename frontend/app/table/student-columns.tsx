@@ -3,6 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { EditStudentDialog } from "../students/edit-dialog"
+import { DeleteStudentDialog } from "../students/delete-confirmation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +25,7 @@ export type Student = {
     fname: string
     lname: string
     pcode: string
-    ylevel: "1st" | "2nd" | "3rd" | "4th" | "5th"
+    ylevel: 1 | 2 | 3 | 4 | 5
     gender: "Female" | "Male"
 }
 
@@ -115,7 +117,7 @@ export const StudentColumns: ColumnDef<Student>[] = [
     {
     id: "actions",
     cell: ({ row }) => {
-      const program = row.original
+      const student = row.original
  
       return (
         <DropdownMenu>
@@ -128,14 +130,8 @@ export const StudentColumns: ColumnDef<Student>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              Edit
-              < EditIcon className="ml-auto h-4 w-4 text-muted-foreground" />
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-1000">
-                Delete
-                < DeleteIcon className="ml-auto h-4 w-4 text-muted-foreground" />
-                </DropdownMenuItem>
+            <EditStudentDialog student={student} />
+            <DeleteStudentDialog student={student} />
           </DropdownMenuContent>
         </DropdownMenu>
       )

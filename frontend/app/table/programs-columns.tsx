@@ -3,17 +3,16 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { EditProgramDialog } from "../programs/edit-dialog"
+import { DeleteProgramDialog } from "../programs/delete-confirmation"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-    EditNoteSharp as EditIcon,
-    DeleteOutlineSharp as DeleteIcon,
     SwapVertSharp as SortIcon
 } from '@mui/icons-material'
 
@@ -82,14 +81,8 @@ export const ProgramColumns: ColumnDef<Program>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              Edit
-              < EditIcon className="ml-auto h-4 w-4 text-muted-foreground" />
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-1000">
-                Delete
-                < DeleteIcon className="ml-auto h-4 w-4 text-muted-foreground" />
-                </DropdownMenuItem>
+            <EditProgramDialog program={program} />
+            <DeleteProgramDialog program={program} />
           </DropdownMenuContent>
         </DropdownMenu>
       )

@@ -3,7 +3,7 @@
 import { CardDemographic } from "@/components/cards"
 import { ProgramColumns, Program } from "../table/programs-columns"
 import { DataTable } from "../table/data-table"
-import { Button } from "@/components/ui/button"
+import { AddProgramDialog } from "./add-dialog"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
 
+//to be replaced with actual data fetching logic
 export const mockData: Program[] = [
   { pcode: "BSCS", name: "Bachelor of Science in Computer Science", ccode: "CCS" },
   { pcode: "BSIT", name: "Bachelor of Science in Information Technology", ccode: "CCS" },
@@ -101,13 +102,7 @@ export default function ProgramsPage() {
           </Select>
         </div>
 
-        <Button
-            variant="default"
-            size="sm"
-            onClick={() => console.log("Add Program")}
-          >
-            Add Program
-          </Button>
+        <AddProgramDialog />
           </div>
 
         <DataTable columns={ProgramColumns} data={filteredData} />
