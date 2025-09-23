@@ -16,12 +16,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export function AddCollegeDialog() {
-  const [ccode, setCcode] = useState("")
-  const [name, setName] = useState("")
+  const [collegeCode, setCcode] = useState("")
+  const [collegeName, setName] = useState("")
 
   const handleAddCollege = () => {
-    console.log("College Code:", ccode)
-    console.log("College Name:", name)
+    console.log("College Code:", collegeCode)
+    console.log("College Name:", collegeName)
     setCcode("")
     setName("")
   }
@@ -42,20 +42,20 @@ export function AddCollegeDialog() {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="ccode">College Code</Label>
+            <Label htmlFor="collegeCode">College Code</Label>
             <Input
-              id="ccode"
+              id="collegeCode"
               placeholder="e.g. CCS"
-              value={ccode}
+              value={collegeCode}
               onChange={(e) => setCcode(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="name">College Name</Label>
+            <Label htmlFor="collegeName">College Name</Label>
             <Input
-              id="name"
+              id="collegeName"
               placeholder="e.g. College of Computer Studies"
-              value={name}
+              value={collegeName}
               onChange={(e) => setName(e.target.value)}
             />
           </div>

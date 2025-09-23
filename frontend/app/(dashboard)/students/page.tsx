@@ -4,7 +4,6 @@ import { CardDemographic } from "@/components/cards"
 import { StudentColumns, Student } from "../../table/student-columns"
 import { DataTable } from "../../table/data-table"
 import { AddStudentDialog } from "./add-dialog"
-import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -14,47 +13,62 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
-
-//to be replaced with actual data fetching logic
-export const mockStudents: Student[] = [
-  { id: "2023-0001", fname: "Juan", lname: "Dela Cruz", pcode: "BSCS", ylevel: 1, gender: "Male" },
-  { id: "2023-0002", fname: "Maria", lname: "Santos", pcode: "BSCS", ylevel: 1, gender: "Female" },
-  { id: "2023-0003", fname: "Pedro", lname: "Reyes", pcode: "BSIT", ylevel: 2, gender: "Male" },
-  { id: "2023-0004", fname: "Ana", lname: "Torres", pcode: "BSIT", ylevel: 2, gender: "Female" },
-  { id: "2023-0005", fname: "Mark", lname: "Lopez", pcode: "BSEE", ylevel: 3, gender: "Male" },
-  { id: "2023-0006", fname: "Jenny", lname: "Garcia", pcode: "BSEE", ylevel: 3, gender: "Female" },
-  { id: "2023-0007", fname: "Carlo", lname: "Ramos", pcode: "BSN", ylevel: 4, gender: "Male" },
-  { id: "2023-0008", fname: "Sophia", lname: "Navarro", pcode: "BSN", ylevel: 4, gender: "Female" },
-  { id: "2023-0009", fname: "Luis", lname: "Fernandez", pcode: "BSEd", ylevel: 1, gender: "Male" },
-  { id: "2023-0010", fname: "Clara", lname: "Domingo", pcode: "BSEd", ylevel: 2, gender: "Female" },
-  { id: "2023-0011", fname: "Miguel", lname: "Aguilar", pcode: "BEEd", ylevel: 3, gender: "Male" },
-  { id: "2023-0012", fname: "Angela", lname: "Morales", pcode: "BEEd", ylevel: 4, gender: "Female" },
-  { id: "2023-0013", fname: "Paolo", lname: "Castro", pcode: "BSAgri", ylevel: 2, gender: "Male" },
-  { id: "2023-0014", fname: "Celine", lname: "Roxas", pcode: "BSAgri", ylevel: 3, gender: "Female" },
-  { id: "2023-0015", fname: "Diego", lname: "Cortez", pcode: "DVM", ylevel: 5, gender: "Male" },
-  { id: "2023-0016", fname: "Isabella", lname: "Velasquez", pcode: "DVM", ylevel: 5, gender: "Female" },
-  { id: "2023-0017", fname: "Enrique", lname: "Martinez", pcode: "BSArch", ylevel: 4, gender: "Male" },
-  { id: "2023-0018", fname: "Valerie", lname: "Jimenez", pcode: "BSArch", ylevel: 3, gender: "Female" },
-  { id: "2023-0019", fname: "Adrian", lname: "Soriano", pcode: "BSIS", ylevel: 2, gender: "Male" },
-  { id: "2023-0020", fname: "Patricia", lname: "Cruz", pcode: "BSIS", ylevel: 1, gender: "Female" },
-  { id: "2023-0021", fname: "Javier", lname: "Bautista", pcode: "BSMarE", ylevel: 4, gender: "Male" },
-  { id: "2023-0022", fname: "Nicole", lname: "Aquino", pcode: "BSMarE", ylevel: 4, gender: "Female" },
-  { id: "2023-0023", fname: "Francis", lname: "Villanueva", pcode: "BSPsy", ylevel: 3, gender: "Male" },
-  { id: "2023-0024", fname: "Ella", lname: "Mendoza", pcode: "BSPsy", ylevel: 3, gender: "Female" },
-  { id: "2023-0025", fname: "Gabriel", lname: "Rivera", pcode: "BSPharm", ylevel: 2, gender: "Male" },
-  { id: "2023-0026", fname: "Monica", lname: "Flores", pcode: "BSPharm", ylevel: 2, gender: "Female" },
-  { id: "2023-0027", fname: "Victor", lname: "Del Rosario", pcode: "BSComm", ylevel: 1, gender: "Male" },
-  { id: "2023-0028", fname: "Hannah", lname: "Salazar", pcode: "BSComm", ylevel: 1, gender: "Female" },
-  { id: "2023-0029", fname: "Samuel", lname: "Galang", pcode: "BSMath", ylevel: 2, gender: "Male" },
-  { id: "2023-0030", fname: "Katrina", lname: "Reyes", pcode: "BSMath", ylevel: 2, gender: "Female" },
-]
+import { useEffect, useState } from "react"
+import { fetchStudents } from "@/lib/student-api"
+import { fetchPrograms } from "@/lib/program-api"
+import { fetchColleges } from "@/lib/college-api"
+import CollegesPage from "../colleges/page"
 
 
 export default function StudentsPage() {
+  const [students, setStudents] = useState<Student[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalColleges, setTotalColleges] = useState(0)
+  const [totalPrograms, setTotalPrograms] = useState(0)
+  const [totalStudents, setTotalStudents] = useState(0)
   const [search, setSearch] = useState("")
-  const [searchBy, setSearchBy] = useState<"all" | "id" | "fname" | "lname" | "pcode" | "ylevel" | "gender">("all")
+  const [searchBy, setSearchBy] = useState<"all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("all")
 
-   const filteredData = mockStudents.filter((student) => {
+  useEffect(() => {
+      const loadPrograms = async () => {
+        try {
+          const data = await fetchStudents(page)
+          setStudents(data.students)
+          setTotalPages(data.pages)
+          setTotalStudents(data.total)
+        } catch (error) {
+          console.error("Failed to load students:", error)
+        }
+      }
+      loadPrograms()
+    }, [page])
+
+    useEffect(() => {
+      const loadPrograms = async () => {
+        try {
+          const data = await fetchColleges(page) 
+          setTotalColleges(data.total)
+        } catch (error) {
+          console.error("Failed to load colleges:", error)
+        }
+      }
+      loadPrograms()
+    }, [])
+
+    useEffect(() => {
+      const loadPrograms = async () => {
+        try {
+          const data = await fetchPrograms(page) 
+          setTotalPrograms(data.total)
+        } catch (error) {
+          console.error("Failed to load programs:", error)
+        }
+      }
+      loadPrograms()
+    }, [])
+
+  const filteredData = students.filter((student) => {
     if (searchBy === "all") {
       return Object.values(student)
         .join(" ")
@@ -62,12 +76,23 @@ export default function StudentsPage() {
         .includes(search.toLowerCase())
     }
 
-    const value = student[searchBy]
-    return value.toString().toLowerCase().includes(search.toLowerCase())
+    const keyMap = {
+      studentID: "studentID",
+      firstName: "firstName",
+      lastName: "lastName",
+      programCode: "programCode",
+      yearLevel: "yearLevel",
+      gender: "gender"
+    }
+
+    const key = keyMap[searchBy]
+    const value = student[key as keyof Student]
+    return value?.toString().toLowerCase().includes(search.toLowerCase())
   })
+
   return (
     <div className="container mx-auto py-1">
-      <CardDemographic colleges={5} programs={12} students={300} />
+      <CardDemographic colleges={totalColleges} programs={totalPrograms} students={totalStudents} />
 
       <div>
         <div className="flex items-center justify-between mb-4 mt-6">
@@ -80,41 +105,46 @@ export default function StudentsPage() {
         </div>
 
         <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-                <div className="relative max-w-sm">
-                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                    placeholder="Search students..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-8" 
-                />
-                </div>
-          <Select
-            value={searchBy}
-            onValueChange={(value) => setSearchBy(value as "all" | "id" | "fname" | "lname" | "pcode" | "ylevel" | "gender")}
+          <div className="flex items-center gap-2">
+            <div className="relative max-w-sm">
+              <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search students..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select
+              value={searchBy}
+              onValueChange={(value) => setSearchBy(value as typeof searchBy)}
             >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Search by</SelectItem>
-              <SelectItem value="id">Student ID</SelectItem>
-              <SelectItem value="fname">First Name</SelectItem>
-              <SelectItem value="lname">Last Name</SelectItem>
-              <SelectItem value="pcode">Program Code</SelectItem>
-              <SelectItem value="ylevel">Year Level</SelectItem>
-              <SelectItem value="gender">Gender</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <AddStudentDialog />
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Search by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Search by</SelectItem>
+                <SelectItem value="studentID">Student ID</SelectItem>
+                <SelectItem value="firstName">First Name</SelectItem>
+                <SelectItem value="lastName">Last Name</SelectItem>
+                <SelectItem value="programCode">Program Code</SelectItem>
+                <SelectItem value="yearLevel">Year Level</SelectItem>
+                <SelectItem value="gender">Gender</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-        <DataTable columns={StudentColumns} data={filteredData} />
+          <AddStudentDialog />
+        </div>
+
+        <DataTable 
+          columns={StudentColumns} 
+          data={filteredData} 
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+        />
       </div>
     </div>
   )
 }
-

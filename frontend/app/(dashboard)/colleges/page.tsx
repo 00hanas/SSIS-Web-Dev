@@ -4,7 +4,6 @@ import { CardDemographic } from "@/components/cards"
 import { CollegeColumns, College } from "../../table/college-columns"
 import { DataTable } from "../../table/data-table"
 import { AddCollegeDialog } from "./add-dialog"
-import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -14,53 +13,81 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
-
-//to be replaced with actual data fetching logic
- export const mockData: College[] = [
-  // Mock college data
-    { ccode: "CCS", name: "College of Computer Studies" },
-    { ccode: "CAS", name: "College of Arts and Sciences" },
-    { ccode: "CBA", name: "College of Business Administration" },
-    { ccode: "COE", name: "College of Engineering" },
-    { ccode: "CON", name: "College of Nursing" },
-    { ccode: "CHS", name: "College of Health Sciences" },
-    { ccode: "CED", name: "College of Education" },
-    { ccode: "CFAD", name: "College of Fine Arts and Design" },
-    { ccode: "CARCH", name: "College of Architecture" },
-    { ccode: "CLAW", name: "College of Law" },
-    { ccode: "CAGR", name: "College of Agriculture" },
-    { ccode: "CVET", name: "College of Veterinary Medicine" },
-    { ccode: "CENV", name: "College of Environmental Science" },
-    { ccode: "CIT", name: "College of Industrial Technology" },
-    { ccode: "CHUM", name: "College of Humanities" },
-    { ccode: "CMASS", name: "College of Mass Communication" },
-    { ccode: "CMED", name: "College of Medicine" },
-    { ccode: "CMUS", name: "College of Music" },
-    { ccode: "CPHY", name: "College of Physical Education" },
-    { ccode: "CPSY", name: "College of Psychology" },
-    { ccode: "CSOC", name: "College of Social Work" },
-    { ccode: "CPOL", name: "College of Political Science" },
-    { ccode: "CJOUR", name: "College of Journalism" },
-    { ccode: "CIS", name: "College of Information Systems" },
-    { ccode: "CMAR", name: "College of Maritime Studies" },
-]
+import { useEffect, useState } from "react"
+import { fetchColleges } from "@/lib/college-api"
+import { fetchPrograms } from "@/lib/program-api"
+import { fetchStudents } from "@/lib/student-api"
 
 export default function CollegesPage() {
+  const [colleges, setColleges] = useState<College[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalColleges, setTotalColleges] = useState(0)
+  const [totalPrograms, setTotalPrograms] = useState(0)
+  const [totalStudents, setTotalStudents] = useState(0)
   const [search, setSearch] = useState("")
-  const [searchBy, setSearchBy] = useState<"all" | "ccode" | "name">("all")
+  const [searchBy, setSearchBy] = useState<"all" | "collegeCode" | "collegeName">("all")
 
-   const filteredData = mockData.filter((college) => {
+  useEffect(() => {
+      const loadPrograms = async () => {
+        try {
+          const data = await fetchColleges(page)
+          setColleges(data.colleges)
+          setTotalPages(data.pages)
+          setTotalColleges(data.total)
+        } catch (error) {
+          console.error("Failed to load colleges:", error)
+        }
+      }
+      loadPrograms()
+    }, [page])
+
+    useEffect(() => {
+      const loadPrograms = async () => {
+        try {
+          const data = await fetchPrograms(page) 
+          setTotalPrograms(data.total)
+        } catch (error) {
+          console.error("Failed to load programs:", error)
+        }
+      }
+      loadPrograms()
+    }, [])
+
+    useEffect(() => {
+      const loadPrograms = async () => {
+        try {
+          const data = await fetchStudents(page) 
+          setTotalStudents(data.total)
+        } catch (error) {
+          console.error("Failed to load students:", error)
+        }
+      }
+      loadPrograms()
+    }, [])
+
+
+
+   const filteredData = colleges.filter((college) => {
     if (searchBy === "all") {
       return Object.values(college)
         .join(" ")
         .toLowerCase()
         .includes(search.toLowerCase())
     }
-    return college[searchBy].toLowerCase().includes(search.toLowerCase())
+
+    const keyMap = {
+      collegeCode: "collegeCode",
+      collegeName: "collegeName"
+    }
+
+    const key = keyMap[searchBy]
+    const value = college[key as keyof College]
+    return value?.toString().toLowerCase().includes(search.toLowerCase())
   })
   return (
     <div className="container mx-auto py-1">
-      <CardDemographic colleges={5} programs={12} students={300} />
+      <CardDemographic colleges={totalColleges} programs={totalPrograms} students={totalStudents} />
 
       <div>
         <div className="flex items-center justify-between mb-4 mt-6">
@@ -85,7 +112,7 @@ export default function CollegesPage() {
                 </div>
           <Select
             value={searchBy}
-            onValueChange={(value) => setSearchBy(value as "all" | "ccode" | "name")}
+            onValueChange={(value) => setSearchBy(value as "all" | "collegeCode" | "collegeName")}
             >
             <SelectTrigger className="w-[180px]">
               <SelectValue />
@@ -101,7 +128,13 @@ export default function CollegesPage() {
         <AddCollegeDialog />
           </div>
 
-        <DataTable columns={CollegeColumns} data={filteredData} />
+        <DataTable 
+          columns={CollegeColumns} 
+          data={filteredData}
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage} 
+        />
       </div>
     </div>
   )

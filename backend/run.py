@@ -2,7 +2,8 @@ from flask import Flask
 from app.extensions import db, migrate
 from config import Config
 from flask_cors import CORS
-from app import create_app
+
+# Import blueprints
 from app.routes.student_routes import student_bp
 from app.routes.program_routes import program_bp
 from app.routes.college_routes import college_bp
@@ -12,23 +13,21 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Enable CORS
-    CORS(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS")}})
-
-    # Import models so Alembic detects them
     from app import models  
 
-    app.register_blueprint(student_bp)
-    app.register_blueprint(program_bp)
-    app.register_blueprint(college_bp)
-    app.register_blueprint(user_bp)
+    app.register_blueprint(student_bp, url_prefix="/api/students")
+    app.register_blueprint(program_bp, url_prefix="/api/programs")
+    app.register_blueprint(college_bp, url_prefix="/api/colleges")
+    app.register_blueprint(user_bp, url_prefix="/api/users")
 
     return app
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

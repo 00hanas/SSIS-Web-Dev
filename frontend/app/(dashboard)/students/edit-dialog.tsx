@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -17,34 +17,47 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditNoteSharp as EditIcon } from '@mui/icons-material'
 
-//to be replaced with actual data fetching logic
-import { mockData as Programs } from "../programs/page"
+import { fetchProgramsForDropdown } from "@/lib/program-api"
+import { Program } from "../../table/programs-columns"
 
 type EditStudentDialogProps = {
     student: {
-        id: string
-        fname: string
-        lname: string
-        pcode: string
-        ylevel: number
+        studentID: string
+        firstName: string
+        lastName: string
+        programCode: string
+        yearLevel: number
         gender: string
     }
 }
 
 export function EditStudentDialog( {student}: EditStudentDialogProps) {
-    const [id, setId] = useState(student.id)
-    const [fname, setFname] = useState(student.fname)
-    const [lname, setLname] = useState(student.lname)
-    const [pcode, setPcode] = useState(student.pcode)
-    const [ylevel, setYlevel] = useState(student.ylevel)
+    const [programs, setPrograms] = useState<Program[]>([])
+    const [studentID, setId] = useState(student.studentID)
+    const [firstName, setFname] = useState(student.firstName)
+    const [lastName, setLname] = useState(student.lastName)
+    const [programCode, setPcode] = useState(student.programCode)
+    const [yearLevel, setYlevel] = useState(student.yearLevel)
     const [gender, setGender] = useState(student.gender)
 
+    useEffect(() => {
+        const loadPrograms = async () => {
+          try {
+            const data = await fetchProgramsForDropdown()
+            setPrograms(data)
+          } catch (error) {
+            console.error("Failed to load colleges:", error)
+          }
+        }
+        loadPrograms()
+      }, [])
+
     const handleEditStudent = () => {
-        console.log("Student ID:", id)
-        console.log("First Name:", fname)
-        console.log("Last Name:", lname)
-        console.log("Program Code:", pcode)
-        console.log("Year Level:", ylevel)
+        console.log("Student ID:", studentID)
+        console.log("First Name:", firstName)
+        console.log("Last Name:", lastName)
+        console.log("Program Code:", programCode)
+        console.log("Year Level:", yearLevel)
         console.log("Gender:", gender)
     }
 
@@ -65,48 +78,48 @@ export function EditStudentDialog( {student}: EditStudentDialogProps) {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="id">Student ID</Label>
+                        <Label htmlFor="studentID">Student ID</Label>
                         <Input
-                            id="id"
-                            value={id}
+                            id="studentID"
+                            value={studentID}
                             onChange={(e) => setId(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="fname">First Name</Label>
+                        <Label htmlFor="firstName">First Name</Label>
                         <Input
-                            id="fname"
-                            value={fname}
+                            id="firstName"
+                            value={firstName}
                             onChange={(e) => setFname(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="lname">Last Name</Label>
+                        <Label htmlFor="lastName">Last Name</Label>
                         <Input
-                            id="lname"
-                            value={lname}
+                            id="lastName"
+                            value={lastName}
                             onChange={(e) => setLname(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="pcode">Program</Label>
-                        <Select value={pcode} onValueChange={setPcode}>
+                        <Label htmlFor="programCode">Program</Label>
+                        <Select value={programCode} onValueChange={setPcode}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {Programs.map((Programs) => (
-                                    <SelectItem key={Programs.pcode} value={Programs.pcode}>
-                                        {Programs.name} ({Programs.pcode})
+                                {programs.map((program) => (
+                                    <SelectItem key={program.programCode} value={program.programCode}>
+                                        {program.programName} ({program.programCode})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="ylevel">Year Level</Label>
+                        <Label htmlFor="yearLevel">Year Level</Label>
                         <Select
-                            value={ylevel.toString()}
+                            value={yearLevel.toString()}
                             onValueChange={(val) => setYlevel(Number(val))}
                         >
                             <SelectTrigger>

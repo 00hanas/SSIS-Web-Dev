@@ -57,3 +57,11 @@ def list_programs():
         'pages': programs.pages,
         'current_page': programs.page
     })
+
+#for dropdowns
+@program_bp.route('/dropdown', methods=['GET'])
+def list_program_for_dropdown():
+    colleges = Program.query.order_by(Program.programName).all()
+    return jsonify({
+        'colleges': [c.serialize() for c in colleges]
+    })

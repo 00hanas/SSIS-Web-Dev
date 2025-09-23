@@ -33,6 +33,7 @@ def delete_college(collegeCode):
     db.session.commit()
     return jsonify({'message': 'College deleted'})
 
+#display with pagination, search, and sorting
 @college_bp.route('', methods=['GET'])
 def list_colleges():
     query = College.query
@@ -52,8 +53,17 @@ def list_colleges():
     colleges = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({
-        'colleges': [c.serialize() for c in colleges.items],
-        'total': colleges.total,
-        'pages': colleges.pages,
-        'current_page': colleges.page
+    'colleges': [c.serialize() for c in colleges.items],
+    'total': colleges.total,
+    'pages': colleges.pages,
+    'current_page': colleges.page
+})
+
+#for dropdowns
+@college_bp.route('/dropdown', methods=['GET'])
+def list_colleges_for_dropdown():
+    colleges = College.query.order_by(College.collegeName).all()
+    return jsonify({
+        'colleges': [c.serialize() for c in colleges]
     })
+

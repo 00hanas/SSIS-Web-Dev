@@ -18,18 +18,18 @@ import { EditNoteSharp as EditIcon } from '@mui/icons-material'
 
 type EditCollegeDialogProps = {
   college: {
-    ccode: string
-    name: string
+    collegeCode: string
+    collegeName: string
   }
 }
 
 export function EditCollegeDialog({ college }: EditCollegeDialogProps) {
-  const [ccode, setCcode] = useState(college.ccode)
-  const [name, setName] = useState(college.name)
+  const [collegeCode, setCcode] = useState(college.collegeCode)
+  const [collegeName, setName] = useState(college.collegeName)
 
   const handleEditCollege = () => {
-    console.log("Updated College Code:", ccode)
-    console.log("Updated College Name:", name)
+    console.log("Updated College Code:", collegeCode)
+    console.log("Updated College Name:", collegeName)
   }
 
   return (
@@ -49,18 +49,18 @@ export function EditCollegeDialog({ college }: EditCollegeDialogProps) {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="ccode">College Code</Label>
+            <Label htmlFor="collegeCode">College Code</Label>
             <Input
-              id="ccode"
-              value={ccode}
+              id="collegeCode"
+              value={collegeCode}
               onChange={(e) => setCcode(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="name">College Name</Label>
+            <Label htmlFor="collegeName">College Name</Label>
             <Input
-              id="name"
-              value={name}
+              id="collegeName"
+              value={collegeName}
               onChange={(e) => setName(e.target.value)}
             />
           </div>

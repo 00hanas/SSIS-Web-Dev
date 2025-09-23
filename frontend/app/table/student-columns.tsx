@@ -8,30 +8,27 @@ import { DeleteStudentDialog } from "../(dashboard)/students/delete-confirmation
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-    EditNoteSharp as EditIcon,
-    DeleteOutlineSharp as DeleteIcon,
     SwapVertSharp as SortIcon
 } from '@mui/icons-material'
 
 
 export type Student = {
-    id: string
-    fname: string
-    lname: string
-    pcode: string
-    ylevel: 1 | 2 | 3 | 4 | 5
+    studentID: string
+    firstName: string
+    lastName: string
+    programCode: string
+    yearLevel: 1 | 2 | 3 | 4 | 5
     gender: "Female" | "Male"
 }
 
 export const StudentColumns: ColumnDef<Student>[] = [
     {
-        accessorKey: "id",
+        accessorKey: "studentID",
         header: ({ column }) => {
       return (
         <Button
@@ -45,7 +42,7 @@ export const StudentColumns: ColumnDef<Student>[] = [
     },
     },
     {
-        accessorKey: "fname",
+        accessorKey: "firstName",
         header: ({ column }) => {
       return (
         <Button
@@ -59,7 +56,7 @@ export const StudentColumns: ColumnDef<Student>[] = [
     },
     },
     {
-        accessorKey: "lname",
+        accessorKey: "lastName",
         header: ({ column }) => {
       return (
         <Button
@@ -73,7 +70,7 @@ export const StudentColumns: ColumnDef<Student>[] = [
     },
     },
     {
-        accessorKey: "pcode",
+        accessorKey: "programCode",
         header: ({ column }) => {
       return (
         <Button
@@ -87,7 +84,7 @@ export const StudentColumns: ColumnDef<Student>[] = [
     },
     },
     {
-        accessorKey: "ylevel",
+        accessorKey: "yearLevel",
         header: ({ column }) => {
       return (
         <Button

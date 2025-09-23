@@ -12,49 +12,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    SwapVertSharp as SortIcon
-} from '@mui/icons-material'
+import { SwapVertSharp as SortIcon } from "@mui/icons-material"
 
 export type College = {
-    ccode: string
-    name: string
+  collegeCode: string
+  collegeName: string
 }
 
 export const CollegeColumns: ColumnDef<College>[] = [
-    {
-        accessorKey: "ccode",
-        header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          College Code
-          <SortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    },
-    {
-        accessorKey: "name",
-        header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          College Name
-          <SortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    },
-    {
+  {
+    accessorKey: "collegeCode",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        College Code
+        <SortIcon className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    enableSorting: true,
+    cell: ({ getValue }) => getValue() ?? "—",
+  },
+  {
+    accessorKey: "collegeName",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        College Name
+        <SortIcon className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    enableSorting: true,
+    cell: ({ getValue }) => getValue() ?? "—",
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const college = row.original
- 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -74,4 +71,3 @@ export const CollegeColumns: ColumnDef<College>[] = [
     },
   },
 ]
-

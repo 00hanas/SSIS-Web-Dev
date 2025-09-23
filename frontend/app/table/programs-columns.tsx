@@ -17,14 +17,14 @@ import {
 } from '@mui/icons-material'
 
 export type Program = {
-    pcode: string
-    name: string
-    ccode: string
+    programCode: string
+    programName: string
+    collegeCode: string
 }
 
 export const ProgramColumns: ColumnDef<Program>[] = [
     {
-        accessorKey: "pcode",
+        accessorKey: "programCode",
         header: ({ column }) => {
       return (
         <Button
@@ -38,7 +38,7 @@ export const ProgramColumns: ColumnDef<Program>[] = [
     },
     },
     {
-        accessorKey: "name",
+        accessorKey: "programName",
         header: ({ column }) => {
       return (
         <Button
@@ -52,7 +52,7 @@ export const ProgramColumns: ColumnDef<Program>[] = [
     },
     },
     {
-        accessorKey: "ccode",
+        accessorKey: "collegeCode",
         header: ({ column }) => {
       return (
         <Button

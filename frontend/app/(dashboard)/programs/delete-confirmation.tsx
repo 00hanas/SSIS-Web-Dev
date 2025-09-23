@@ -14,11 +14,11 @@ import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
 
 interface DeleteProgramDialogProps {
   program: {
-    pcode: string
-    name: string
-    ccode: string
+    programCode: string
+    programName: string
+    collegeCode: string
   }
-  onDelete?: (program: { pcode: string; name: string; ccode:string }) => void
+  onDelete?: (program: { programCode: string; programName: string; collegeCode:string }) => void
 }
 
 export function DeleteProgramDialog({ program, onDelete }: DeleteProgramDialogProps) {
@@ -35,7 +35,7 @@ export function DeleteProgramDialog({ program, onDelete }: DeleteProgramDialogPr
           <DialogTitle>Delete Program</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{program.name} ({program.pcode})</span>? This action
+            <span className="font-semibold">{program.programName} ({program.programCode})</span>? This action
             cannot be undone.
           </DialogDescription>
         </DialogHeader>

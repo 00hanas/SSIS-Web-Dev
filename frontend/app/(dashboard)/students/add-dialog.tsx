@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -16,23 +16,36 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-//to be replaced with actual data fetching logic
-import { mockData as Programs } from "../programs/page"
+import { Program } from "../../table/programs-columns"
+import { fetchProgramsForDropdown } from "@/lib/program-api"
 
 export function AddStudentDialog() {
-    const [id, setId] = useState("")
-    const [fname, setFname] = useState("")
-    const [lname, setLname] = useState("")
-    const [pcode, setPcode] = useState("")
-    const [ylevel, setYlevel] = useState("")
+    const [programs, setPrograms] = useState<Program[]>([])
+    const [studentID, setId] = useState("")
+    const [firstName, setFname] = useState("")
+    const [lastName, setLname] = useState("")
+    const [programCode, setPcode] = useState("")
+    const [yearLevel, setYlevel] = useState("")
     const [gender, setGender] = useState("")
 
+    useEffect(() => {
+        const loadPrograms = async () => {
+          try {
+            const data = await fetchProgramsForDropdown()
+            setPrograms(data)
+          } catch (error) {
+            console.error("Failed to load programs:", error)
+          }
+        }
+        loadPrograms()
+      }, [])
+
     const handleAddStudent = () => {
-        console.log("Student ID:", id)
-        console.log("First Name:", fname)
-        console.log("Last Name:", lname)
-        console.log("Program Code:", pcode)
-        console.log("Year Level:", ylevel)
+        console.log("Student ID:", studentID)
+        console.log("First Name:", firstName)
+        console.log("Last Name:", lastName)
+        console.log("Program Code:", programCode)
+        console.log("Year Level:", yearLevel)
         console.log("Gender:", gender)
         setId("")
         setFname("")
@@ -58,50 +71,50 @@ export function AddStudentDialog() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="id">Student ID</Label>
+                        <Label htmlFor="studentID">Student ID</Label>
                         <Input
-                            id="id"
+                            id="studentID"
                             placeholder="e.g. 2023-0001"
-                            value={id}
+                            value={studentID}
                             onChange={(e) => setId(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="fname">First Name</Label>
+                        <Label htmlFor="firstName">First Name</Label>
                         <Input
-                            id="fname"
+                            id="firstName"
                             placeholder="e.g. Juhanara"
-                            value={fname}
+                            value={firstName}
                             onChange={(e) => setFname(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="lname">Last Name</Label>
+                        <Label htmlFor="lastName">Last Name</Label>
                         <Input
-                            id="lname"
+                            id="lastName"
                             placeholder="e.g. Saluta"
-                            value={lname}
+                            value={lastName}
                             onChange={(e) => setLname(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="pcode">Program</Label>
-                        <Select value={pcode} onValueChange={setPcode}>
+                        <Label htmlFor="programCode">Program</Label>
+                        <Select value={programCode} onValueChange={setPcode}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a program" />
                             </SelectTrigger>
-                            <SelectContent>
-                                {Programs.map((Programs) => (
-                                    <SelectItem key={Programs.pcode} value={Programs.pcode}>
-                                        {Programs.name} ({Programs.pcode})
+                            <SelectContent className="max-h-[300px] overflow-y-auto">
+                                {programs.map((program) => (
+                                    <SelectItem key={program.programCode} value={program.programCode}>
+                                        {program.programName} ({program.programCode})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="ylevel">Year Level</Label>
-                        <Select value={ylevel} onValueChange={setYlevel}>
+                        <Label htmlFor="yearLevel">Year Level</Label>
+                        <Select value={yearLevel} onValueChange={setYlevel}>
                             <SelectTrigger>
                             <SelectValue placeholder="Select year level" />
                             </SelectTrigger>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -17,26 +17,39 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditNoteSharp as EditIcon } from '@mui/icons-material'
 
-//to be replaced with actual data fetching logic
-import { mockData as Colleges } from "../colleges/page"
+import { fetchCollegesForDropdown } from "@/lib/college-api"
+import { College } from "../../table/college-columns"
 
 type EditProgramDialogProps = {
     program: {
-        pcode: string
-        name: string
-        ccode: string
+        programCode: string
+        programName: string
+        collegeCode: string
     }
 }
 
 export function EditProgramDialog( { program }: EditProgramDialogProps) {
-    const [pcode, setPcode] = useState(program.pcode)
-    const [name, setName] = useState(program.name)
-    const [ccode, setCcode] = useState(program.ccode)
+    const [colleges, setColleges] = useState<College[]>([])
+    const [programCode, setPcode] = useState(program.programCode)
+    const [programName, setName] = useState(program.programName)
+    const [collegeCode, setCcode] = useState(program.collegeCode)
+
+    useEffect(() => {
+    const loadColleges = async () => {
+      try {
+        const data = await fetchCollegesForDropdown()
+        setColleges(data)
+      } catch (error) {
+        console.error("Failed to load colleges:", error)
+      }
+    }
+    loadColleges()
+  }, [])
 
     const handleEditProgram = () => {
-        console.log("Updated Program Code:", pcode)
-        console.log("Updated Program Name:", name)
-        console.log("Updated College Code:", ccode)
+        console.log("Updated Program Code:", programCode)
+        console.log("Updated Program Name:", programName)
+        console.log("Updated College Code:", collegeCode)
     }
 
     return (
@@ -56,31 +69,31 @@ export function EditProgramDialog( { program }: EditProgramDialogProps) {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="pcode">Program Code</Label>
+                        <Label htmlFor="programCode">Program Code</Label>
                         <Input
-                            id="pcode"
-                            value={pcode}
+                            id="programCode"
+                            value={programCode}
                             onChange={(e) => setPcode(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Program Name</Label>
+                        <Label htmlFor="programName">Program Name</Label>
                         <Input
-                            id="name"
-                            value={name}
+                            id="programName"
+                            value={programName}
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-            <Label htmlFor="ccode">College</Label>
-            <Select value={ccode} onValueChange={setCcode}>
+            <Label htmlFor="collegeCode">College</Label>
+            <Select value={collegeCode} onValueChange={setCcode}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Colleges.map((Colleges) => (
-                  <SelectItem key={Colleges.ccode} value={Colleges.ccode}>
-                    {Colleges.name} ({Colleges.ccode})
+                {colleges.map((college) => (
+                  <SelectItem key={college.collegeCode} value={college.collegeCode}>
+                    {college.collegeName} ({college.collegeCode})
                   </SelectItem>
                 ))}
               </SelectContent>

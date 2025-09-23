@@ -14,14 +14,14 @@ import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
 
 interface DeleteStudentDialogProps {
   student: {
-    id: string
-    fname: string
-    lname: string
-    pcode: string
-    ylevel: 1 | 2 | 3 | 4 | 5
+    studentID: string
+    firstName: string
+    lastName: string
+    programCode: string
+    yearLevel: 1 | 2 | 3 | 4 | 5
     gender: "Female" | "Male"
   }
-  onDelete?: (student: { id: string; fname: string; lname: string; pcode: string; ylevel: 1 | 2 | 3 | 4 | 5;
+  onDelete?: (student: { studentID: string; firstName: string; lastName: string; programCode: string; yearLevel: 1 | 2 | 3 | 4 | 5;
     gender: "Female" | "Male" }) => void
 }
 
@@ -39,7 +39,7 @@ export function DeleteStudentDialog({ student, onDelete }: DeleteStudentDialogPr
           <DialogTitle>Delete Student</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{student.fname} {student.lname}  ({student.id})</span>? This action
+            <span className="font-semibold">{student.firstName} {student.lastName}  ({student.studentID})</span>? This action
             cannot be undone.
           </DialogDescription>
         </DialogHeader>

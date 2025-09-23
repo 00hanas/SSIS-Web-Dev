@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -16,19 +16,32 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-//to be replaced with actual data fetching logic
-import { mockData as Colleges } from "../colleges/page"
+import { fetchCollegesForDropdown } from "@/lib/college-api"
+import { College } from "../../table/college-columns"
 
 
 export function AddProgramDialog() {
-    const [pcode, setPcode] = useState("")
-    const [name, setName] = useState("")
-    const [ccode, setCcode] = useState("")
+    const [colleges, setColleges] = useState<College[]>([])
+    const [programCode, setPcode] = useState("")
+    const [programName, setName] = useState("")
+    const [collegeCode, setCcode] = useState("")
+
+    useEffect(() => {
+    const loadColleges = async () => {
+      try {
+        const data = await fetchCollegesForDropdown()
+        setColleges(data)
+      } catch (error) {
+        console.error("Failed to load colleges:", error)
+      }
+    }
+    loadColleges()
+  }, [])
 
     const handleAddProgram = () => {
-        console.log("Program Code:", pcode)
-        console.log("Program Name:", name)
-        console.log("College Code:", ccode)
+        console.log("Program Code:", programCode)
+        console.log("Program Name:", programName)
+        console.log("College Code:", collegeCode)
         setPcode("")
         setName("")
         setCcode("")
@@ -50,36 +63,39 @@ export function AddProgramDialog() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="pcode">Program Code</Label>
+                        <Label htmlFor="programCode">Program Code</Label>
                         <Input
-                            id="pcode"
+                            id="programCode"
                             placeholder="e.g. BSCS"
-                            value={pcode}
+                            value={programCode}
                             onChange={(e) => setPcode(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Program Name</Label>
+                        <Label htmlFor="programName">Program Name</Label>
                         <Input
-                            id="name"
+                            id="programName"
                             placeholder="e.g. Bachelor of Science in Computer Science"
-                            value={name}
+                            value={programName}
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
                     <div className="grid gap-2">
-            <Label htmlFor="ccode">College</Label>
-            <Select value={ccode} onValueChange={setCcode}>
+            <Label htmlFor="collegeCode">College</Label>
+            <Select value={collegeCode} onValueChange={setCcode}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a college" />
               </SelectTrigger>
-              <SelectContent>
-                {Colleges.map((Colleges) => (
-                  <SelectItem key={Colleges.ccode} value={Colleges.ccode}>
-                    {Colleges.name} ({Colleges.ccode})
+              <SelectContent className="max-h-[300px] overflow-y-auto">
+                {colleges.map((college) => (
+                  <SelectItem key={college.collegeCode} value={college.collegeCode}>
+                    {college.collegeName} ({college.collegeCode})
                   </SelectItem>
                 ))}
               </SelectContent>
+
+
+
             </Select>
           </div>
         </div>

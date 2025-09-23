@@ -14,10 +14,10 @@ import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
 
 interface DeleteCollegeDialogProps {
   college: {
-    ccode: string
-    name: string
+    collegeCode: string
+    collegeName: string
   }
-  onDelete?: (college: { ccode: string; name: string }) => void
+  onDelete?: (college: { collegeCode: string; name: string }) => void
 }
 
 export function DeleteCollegeDialog({ college, onDelete }: DeleteCollegeDialogProps) {
@@ -34,7 +34,7 @@ export function DeleteCollegeDialog({ college, onDelete }: DeleteCollegeDialogPr
           <DialogTitle>Delete College</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{college.name} ({college.ccode})</span>? This action
+            <span className="font-semibold">{college.collegeName} ({college.collegeCode})</span>? This action
             cannot be undone.
           </DialogDescription>
         </DialogHeader>
@@ -44,7 +44,7 @@ export function DeleteCollegeDialog({ college, onDelete }: DeleteCollegeDialogPr
             variant="destructive"
             onClick={() => {
               console.log("Deleting college", college)
-              onDelete?.(college)
+              onDelete?.({ collegeCode: college.collegeCode, name: college.collegeName })
             }}
           >
             Confirm
