@@ -15,11 +15,18 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
 import { Program } from "../../table/programs-columns"
 import { fetchProgramsForDropdown } from "@/lib/program-api"
+import { Student } from "@/app/table/student-columns"
+import { createStudent } from "@/lib/student-api"
+import { EntityConfirmationDialog } from "@/components/entity-confirmation-dialog"
 
-export function AddStudentDialog() {
+type AddStudentDialogProps = {
+    onStudentAdded?: () => void
+}
+
+export function AddStudentDialog( { onStudentAdded }: AddStudentDialogProps) {
+    const [addedStudent, setAddedStudent] = useState<Student | null>(null)
     const [programs, setPrograms] = useState<Program[]>([])
     const [studentID, setId] = useState("")
     const [firstName, setFname] = useState("")
@@ -27,6 +34,8 @@ export function AddStudentDialog() {
     const [programCode, setPcode] = useState("")
     const [yearLevel, setYlevel] = useState("")
     const [gender, setGender] = useState("")
+    const [errorMessage, setErrorMessage] = useState("")
+    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
         const loadPrograms = async () => {
@@ -40,23 +49,69 @@ export function AddStudentDialog() {
         loadPrograms()
       }, [])
 
-    const handleAddStudent = () => {
-        console.log("Student ID:", studentID)
-        console.log("First Name:", firstName)
-        console.log("Last Name:", lastName)
-        console.log("Program Code:", programCode)
-        console.log("Year Level:", yearLevel)
-        console.log("Gender:", gender)
+    const handleAddStudent = async () => {
+        const studentIdPattern = /^\d{4}-\d{4}$/
+        if (
+            !studentID.trim() ||
+            !firstName.trim() ||
+            !lastName.trim() ||
+            !programCode.trim() ||
+            !yearLevel.trim() ||
+            !gender.trim()
+            ) {
+            setErrorMessage("Please fill in all fields.")
+            return
+            }
+
+        if (!studentIdPattern.test(studentID.trim())) {
+            setErrorMessage("Student ID must follow the format XXXX-XXXX using digits only.")
+            return
+        }
+
+        try {
+            const response = await createStudent(studentID, firstName, lastName, programCode, parseInt(yearLevel), gender)
+            setAddedStudent(response.student)
+            setId("")
+            setFname("")
+            setLname("")
+            setPcode("")
+            setYlevel("")
+            setGender("")
+            setErrorMessage("")
+            setIsOpen(false)
+            onStudentAdded?.()
+        } catch (error: any) {
+            if (error.message === "Student ID already exists") {
+                setErrorMessage("Student ID already exists. Please use a different ID.")
+            } else if (error.message === "Missing required fields") {
+                setErrorMessage("Please fill in all fields.")
+            } else {
+                setErrorMessage("Something went wrong. Try again.")
+            }
+        }
+    }
+
+    const resetForm = () => {
         setId("")
         setFname("")
         setLname("")
         setPcode("")
         setYlevel("")
         setGender("")
+        setErrorMessage("")
+    }
+
+    const handleDialogClose = () => {
+        resetForm()
+        setIsOpen(false)
     }
 
     return (
-        <Dialog>
+        <>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+          if (!open) handleDialogClose()
+          else setIsOpen(true)
+        }}>
             <DialogTrigger asChild>
                 <Button variant="default" size="sm">
                     Add Student
@@ -140,6 +195,9 @@ export function AddStudentDialog() {
                                 </SelectContent>
                         </Select>
                     </div>
+                    {errorMessage && (
+                        <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
+                    )}
                 </div>
                 <DialogFooter>
           <DialogClose asChild>
@@ -149,5 +207,13 @@ export function AddStudentDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    {addedStudent && (
+          <EntityConfirmationDialog
+            entityType="Student"
+            entity={{ code: addedStudent.studentID, name: `${addedStudent.firstName} ${addedStudent.lastName}` }}
+            onClose={() => setAddedStudent(null)}
+            />
+        )}
+    </>
     )
 }

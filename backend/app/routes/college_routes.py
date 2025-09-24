@@ -4,13 +4,24 @@ from app.extensions import db
 
 college_bp = Blueprint("college_bp", __name__, url_prefix="/api/colleges")
 
-@college_bp.route('', methods=['POST'])
+#add college
+@college_bp.route('/create', methods=['POST'])
 def create_college():
     data = request.get_json()
+    if not data or "collegeCode" not in data or "collegeName" not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    existing = College.query.filter(
+        db.func.lower(College.collegeCode) == data["collegeCode"].lower()
+    ).first()
+    if existing:
+        return jsonify({"error": "College code already exists"}), 409
+
     college = College(**data)
     db.session.add(college)
     db.session.commit()
-    return jsonify({'message': 'College created', 'collegeCode': college.collegeCode}), 201
+
+    return jsonify({'message': 'College created', 'college': college.serialize()}), 201
 
 @college_bp.route('/<collegeCode>', methods=['GET'])
 def get_college(collegeCode):

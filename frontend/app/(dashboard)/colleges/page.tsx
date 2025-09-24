@@ -22,24 +22,29 @@ export default function CollegesPage() {
   const [colleges, setColleges] = useState<College[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
   const [totalColleges, setTotalColleges] = useState(0)
   const [totalPrograms, setTotalPrograms] = useState(0)
   const [totalStudents, setTotalStudents] = useState(0)
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "collegeCode" | "collegeName">("all")
 
-  useEffect(() => {
-      const loadPrograms = async () => {
-        try {
-          const data = await fetchColleges(page)
-          setColleges(data.colleges)
-          setTotalPages(data.pages)
-          setTotalColleges(data.total)
-        } catch (error) {
-          console.error("Failed to load colleges:", error)
-        }
+  const loadColleges = async () => {
+    setIsLoading(true)
+      try {
+        const data = await fetchColleges(page)
+        setColleges(data.colleges)
+        setTotalPages(data.pages)
+        setTotalColleges(data.total)
+      } catch (error) {
+        console.error("Failed to load colleges:", error)
+      } finally {
+        setIsLoading(false)
       }
-      loadPrograms()
+  }
+
+  useEffect(() => {
+      loadColleges()
     }, [page])
 
     useEffect(() => {
@@ -55,7 +60,7 @@ export default function CollegesPage() {
     }, [])
 
     useEffect(() => {
-      const loadPrograms = async () => {
+      const loadStudents = async () => {
         try {
           const data = await fetchStudents(page) 
           setTotalStudents(data.total)
@@ -63,28 +68,9 @@ export default function CollegesPage() {
           console.error("Failed to load students:", error)
         }
       }
-      loadPrograms()
+      loadStudents()
     }, [])
 
-
-
-   const filteredData = colleges.filter((college) => {
-    if (searchBy === "all") {
-      return Object.values(college)
-        .join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    }
-
-    const keyMap = {
-      collegeCode: "collegeCode",
-      collegeName: "collegeName"
-    }
-
-    const key = keyMap[searchBy]
-    const value = college[key as keyof College]
-    return value?.toString().toLowerCase().includes(search.toLowerCase())
-  })
   return (
     <div className="container mx-auto py-1">
       <CardDemographic colleges={totalColleges} programs={totalPrograms} students={totalStudents} />
@@ -125,16 +111,45 @@ export default function CollegesPage() {
           </Select>
         </div>
 
-        <AddCollegeDialog />
+        <AddCollegeDialog onCollegeAdded={loadColleges}/>
           </div>
+        {isLoading ? (
+          <div className="text-center py-6 text-muted-foreground">Loading colleges...</div>
+        ) : colleges.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">Loading colleges...</div>
+        ) : (
+          (() => {
+            const filteredData = colleges.filter((college) => {
+              if (searchBy === "all") {
+                return Object.values(college)
+                  .join(" ")
+                  .toLowerCase()
+                  .includes(search.toLowerCase())
+              }
 
-        <DataTable 
-          columns={CollegeColumns} 
-          data={filteredData}
-          page={page}
-          totalPages={totalPages}
-          setPage={setPage} 
-        />
+              const keyMap = {
+                collegeCode: "collegeCode",
+                collegeName: "collegeName"
+              }
+
+              const key = keyMap[searchBy]
+              const value = college[key as keyof College]
+              return value?.toString().toLowerCase().includes(search.toLowerCase())
+            })
+
+            return (
+              <div className="transition-opacity duration-300 opacity-100">
+                <DataTable 
+                  columns={CollegeColumns} 
+                  data={filteredData}
+                  page={page}
+                  totalPages={totalPages}
+                  setPage={setPage}
+                />
+              </div>
+            )
+          })()
+        )}
       </div>
     </div>
   )

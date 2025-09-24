@@ -4,13 +4,24 @@ from app.extensions import db
 
 student_bp = Blueprint("student_bp", __name__, url_prefix="/api/students")
 
-@student_bp.route('', methods=['POST'])
+#add student
+@student_bp.route('/create', methods=['POST'])
 def create_student():
     data = request.get_json()
+    if not data or 'studentID' not in data or 'firstName' not in data or 'lastName' not in data or 'programCode' not in data or 'yearLevel' not in data or 'gender' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    existing = Student.query.filter(
+        db.func.lower(Student.studentID) == data["studentID"].lower()
+    ).first()
+    if existing:
+        return jsonify({"error": "Student ID already exists"}), 409
+    
     student = Student(**data)
     db.session.add(student)
     db.session.commit()
-    return jsonify({'message': 'Student created', 'studentID': student.studentID}), 201
+
+    return jsonify({'message': 'Student created', 'student': student.serialize()}), 201
 
 @student_bp.route('/<studentID>', methods=['GET'])
 def get_student(studentID):

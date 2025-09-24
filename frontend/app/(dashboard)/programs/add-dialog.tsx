@@ -15,16 +15,24 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
 import { fetchCollegesForDropdown } from "@/lib/college-api"
 import { College } from "../../table/college-columns"
+import { EntityConfirmationDialog } from "@/components/entity-confirmation-dialog"
+import { Program } from "@/app/table/programs-columns"
+import { createProgram } from "@/lib/program-api"
 
+type AddProgramDialogProps = {
+  onProgramAdded?: () => void
+}
 
-export function AddProgramDialog() {
+export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
+    const [addedProgram, setAddedProgram] = useState<Program | null>(null)
     const [colleges, setColleges] = useState<College[]>([])
     const [programCode, setPcode] = useState("")
     const [programName, setName] = useState("")
     const [collegeCode, setCcode] = useState("")
+    const [errorMessage, setErrorMessage] = useState("")
+    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
     const loadColleges = async () => {
@@ -38,17 +46,50 @@ export function AddProgramDialog() {
     loadColleges()
   }, [])
 
-    const handleAddProgram = () => {
-        console.log("Program Code:", programCode)
-        console.log("Program Name:", programName)
-        console.log("College Code:", collegeCode)
+    const handleAddProgram = async () => {
+      if (!programCode.trim() || !programName.trim() || !collegeCode.trim()) {
+        setErrorMessage("Please fill in all fields.")
+        return
+      }
+
+      try {
+        const response = await createProgram(programCode, programName, collegeCode)
+        setAddedProgram(response.program)
         setPcode("")
         setName("")
         setCcode("")
+        setErrorMessage("")
+        setIsOpen(false)
+        onProgramAdded?.()
+      } catch (error: any) {
+        if (error.message === "Program code already exists") {
+          setErrorMessage(`Program Code (${programCode}) is already taken.`)
+        } else if (error.message === "Missing required fields") {
+          setErrorMessage("Please fill in all fields.")
+        } else {
+          setErrorMessage("Something went wrong. Try again.")
+        }
+      }
+    }
+
+    const resetForm = () => {
+      setPcode("")
+      setName("")
+      setCcode("")
+      setErrorMessage("")
+    }
+
+    const handleDialogClose = () => {
+      resetForm()
+      setIsOpen(false)
     }
 
     return (
-        <Dialog>
+      <>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+          if (!open) handleDialogClose()
+          else setIsOpen(true)
+        }}>
             <DialogTrigger asChild>
                 <Button variant="default" size="sm">
                     Add Program
@@ -93,11 +134,11 @@ export function AddProgramDialog() {
                   </SelectItem>
                 ))}
               </SelectContent>
-
-
-
             </Select>
           </div>
+          {errorMessage && (
+                <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
+              )}
         </div>
         <DialogFooter>
           <DialogClose asChild>
@@ -107,6 +148,13 @@ export function AddProgramDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-    
+    {addedProgram && (
+      <EntityConfirmationDialog
+        entityType="Program"
+        entity={{ code: addedProgram.programCode, name: addedProgram.programName }}
+        onClose={() => setAddedProgram(null)}
+        />
+    )}
+    </>
+  ) 
 }

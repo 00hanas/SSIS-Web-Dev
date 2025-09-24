@@ -4,13 +4,24 @@ from app.extensions import db
 
 program_bp = Blueprint("program_bp", __name__, url_prefix="/api/programs")
 
-@program_bp.route('', methods=['POST'])
+#add program
+@program_bp.route('/create', methods=['POST'])
 def create_program():
     data = request.get_json()
+    if not data or 'programCode' not in data or 'programName' not in data or 'collegeCode' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    existing = Program.query.filter(
+        db.func.lower(Program.programCode) == data["programCode"].lower()
+    ).first()
+    if existing:
+        return jsonify({"error": "Program code already exists"}), 409
+    
     program = Program(**data)
     db.session.add(program)
     db.session.commit()
-    return jsonify({'message': 'Program created', 'programCode': program.programCode}), 201
+
+    return jsonify({'message': 'Program created', 'program': program.serialize()}), 201
 
 @program_bp.route('/<programCode>', methods=['GET'])
 def get_program(programCode):

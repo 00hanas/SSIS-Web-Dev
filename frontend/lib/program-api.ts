@@ -32,3 +32,18 @@ export const fetchProgramsForDropdown = async (): Promise<Program[]> => {
 
   return data.colleges
 }
+
+export const createProgram = async (programCode: string, programName: string, collegeCode: string) => {
+  const res = await fetch("http://127.0.0.1:5000/api/programs/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ programCode, programName, collegeCode }),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json()
+    throw new Error(errorData.error || "Unknown error")
+  }
+
+  return await res.json()
+}
