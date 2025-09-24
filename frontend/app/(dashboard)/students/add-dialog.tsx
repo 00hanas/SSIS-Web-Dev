@@ -159,11 +159,11 @@ export function AddStudentDialog( { onStudentAdded }: AddStudentDialogProps) {
                                 <SelectValue placeholder="Select a program" />
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px] overflow-y-auto">
-                                {programs.map((program) => (
+                                {Array.isArray(programs) && programs.map((program) => (
                                     <SelectItem key={program.programCode} value={program.programCode}>
                                         {program.programName} ({program.programCode})
                                     </SelectItem>
-                                ))}
+                                    ))}
                             </SelectContent>
                         </Select>
                     </div>
