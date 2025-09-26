@@ -35,3 +35,29 @@ export const createStudent = async (studentID: string, firstName: string, lastNa
 
   return await res.json()
 }
+
+export async function fetchStudent(studentID: string): Promise<Student> {
+  const response = await fetch(`http://127.0.0.1:5000/api/students/${studentID}`)
+  if (!response.ok) {
+    console.error("Fetch failed with status:", response.status)
+    throw new Error("Failed to fetch student")
+  }
+  const data = await response.json()
+  console.log("Fetched student:", data)
+  return data
+}
+
+export async function updateStudent(originalCode: string, studentID: string, firstName: string, lastName: string, programCode: string, yearLevel: number, gender: string): Promise<Student> {
+  const response = await fetch(`http://127.0.0.1:5000/api/students/${originalCode}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ studentID, firstName, lastName, programCode, yearLevel, gender }),
+  })
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update student")
+  }
+
+  return data.student
+}

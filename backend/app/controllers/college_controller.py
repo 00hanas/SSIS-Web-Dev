@@ -5,6 +5,7 @@ from app.forms.college_form import CollegeForm
 
 college_bp = Blueprint("college_bp", __name__, url_prefix="/api/colleges")
 
+#add
 @college_bp.route('/create', methods=['POST'])
 def create_college():
     form = CollegeForm(request.get_json())
@@ -23,19 +24,35 @@ def create_college():
 
     return jsonify({'message': 'College created', 'college': college.serialize()}), 201
 
+#edit (for pre-filled data)
 @college_bp.route('/<collegeCode>', methods=['GET'])
 def get_college(collegeCode):
     college = College.query.get_or_404(collegeCode)
     return jsonify(college.serialize())
 
+#update
 @college_bp.route('/<collegeCode>', methods=['PUT'])
 def update_college(collegeCode):
     college = College.query.get_or_404(collegeCode)
     data = request.get_json()
-    for key, value in data.items():
-        setattr(college, key, value)
+    form = CollegeForm(data)
+
+    if not form.is_valid():
+        return jsonify({"error": form.errors[0]}), 400
+
+    if form.collegeCode.lower() != college.collegeCode.lower():
+        existing = College.query.filter(
+            db.func.lower(College.collegeCode) == form.collegeCode.lower(),
+            db.func.lower(College.collegeCode) != college.collegeCode.lower()
+        ).first()
+        if existing:
+            return jsonify({"error": "College code already exists"}), 409
+
+    college.collegeCode = form.collegeCode
+    college.collegeName = form.collegeName
     db.session.commit()
-    return jsonify({'message': 'College updated'})
+
+    return jsonify({'message': 'College updated', 'college': college.serialize()})
 
 @college_bp.route('/<collegeCode>', methods=['DELETE'])
 def delete_college(collegeCode):

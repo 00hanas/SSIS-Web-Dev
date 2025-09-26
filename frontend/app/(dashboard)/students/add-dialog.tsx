@@ -211,6 +211,7 @@ export function AddStudentDialog( { onStudentAdded }: AddStudentDialogProps) {
           <EntityConfirmationDialog
             entityType="Student"
             entity={{ code: addedStudent.studentID, name: `${addedStudent.firstName} ${addedStudent.lastName}` }}
+            actionType="added"
             onClose={() => setAddedStudent(null)}
             />
         )}

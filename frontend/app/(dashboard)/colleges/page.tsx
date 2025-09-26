@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { fetchColleges } from "@/lib/college-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
+import { EditCollegeDialog } from "./edit-dialog"
 
 export default function CollegesPage() {
   const [colleges, setColleges] = useState<College[]>([])
@@ -28,6 +29,11 @@ export default function CollegesPage() {
   const [totalStudents, setTotalStudents] = useState(0)
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "collegeCode" | "collegeName">("all")
+  const [selectedCollege, setSelectedCollege] = useState<College | null>(null)
+
+  const openEditDialog = (college: College) => {
+    setSelectedCollege(college)
+  }
 
   const loadColleges = async () => {
     setIsLoading(true)
@@ -140,12 +146,22 @@ export default function CollegesPage() {
             return (
               <div className="transition-opacity duration-300 opacity-100">
                 <DataTable 
-                  columns={CollegeColumns} 
+                  columns={CollegeColumns(openEditDialog)} 
                   data={filteredData}
                   page={page}
                   totalPages={totalPages}
                   setPage={setPage}
                 />
+
+                {selectedCollege && (
+                  <EditCollegeDialog
+                    college={selectedCollege ?? { collegeCode: "", collegeName: "" }}
+                    onCollegeUpdated={() => {
+                      loadColleges()
+                      setSelectedCollege(null)
+                    }}
+                  />
+                )}
               </div>
             )
           })()

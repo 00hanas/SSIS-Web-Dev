@@ -152,6 +152,7 @@ export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
       <EntityConfirmationDialog
         entityType="Program"
         entity={{ code: addedProgram.programCode, name: addedProgram.programName }}
+        actionType="added"
         onClose={() => setAddedProgram(null)}
         />
     )}

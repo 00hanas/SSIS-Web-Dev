@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { fetchColleges } from "@/lib/college-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
+import { EditProgramDialog } from "./edit-dialog"
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([])
@@ -28,6 +29,11 @@ export default function ProgramsPage() {
   const [totalStudents, setTotalStudents] = useState(0)
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "programCode" | "programName" | "collegeCode">("all")
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null)
+
+  const openEditDialog = (program: Program) => {
+    setSelectedProgram(program)
+  }
 
   const loadPrograms = async () => {
     setIsLoading(true)
@@ -48,7 +54,7 @@ export default function ProgramsPage() {
   }, [page])
 
   useEffect(() => {
-      const loadPrograms = async () => {
+      const loadColleges = async () => {
         try {
           const data = await fetchColleges(page) 
           setTotalColleges(data.total)
@@ -56,11 +62,11 @@ export default function ProgramsPage() {
           console.error("Failed to load colleges:", error)
         }
       }
-      loadPrograms()
+      loadColleges()
     }, [])
 
     useEffect(() => {
-      const loadPrograms = async () => {
+      const loadStudents = async () => {
         try {
           const data = await fetchStudents(page) 
           setTotalStudents(data.total)
@@ -68,7 +74,7 @@ export default function ProgramsPage() {
           console.error("Failed to load students:", error)
         }
       }
-      loadPrograms()
+      loadStudents()
     }, [])
 
   return (
@@ -139,17 +145,25 @@ export default function ProgramsPage() {
                 return value?.toString().toLowerCase().includes(search.toLowerCase())
               })
 
-              return filteredData.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">No programs found.</div>
-              ) : (
+              return (
                 <div className="transition-opacity duration-300 opacity-100">
-                  <DataTable
-                    columns={ProgramColumns}
+                  <DataTable 
+                    columns={ProgramColumns(openEditDialog)} 
                     data={filteredData}
                     page={page}
                     totalPages={totalPages}
                     setPage={setPage}
                   />
+  
+                  {selectedProgram && (
+                    <EditProgramDialog
+                      program={selectedProgram ?? { programCode: "", programName: "", collegeCode: "" }}
+                      onProgramUpdated={() => {
+                        loadPrograms()
+                        setSelectedProgram(null)
+                      }}
+                    />
+                  )}
                 </div>
               )
             })()

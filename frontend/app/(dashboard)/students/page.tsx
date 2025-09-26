@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { fetchStudents } from "@/lib/student-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchColleges } from "@/lib/college-api"
+import { EditStudentDialog } from "./edit-dialog"
 
 
 export default function StudentsPage() {
@@ -29,6 +30,11 @@ export default function StudentsPage() {
   const [totalStudents, setTotalStudents] = useState(0)
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("all")
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+
+  const openEditDialog = (student: Student) => {
+    setSelectedStudent(student)
+  }
 
   const loadStudents = async () => {
     setIsLoading(true)
@@ -45,32 +51,32 @@ export default function StudentsPage() {
   }
 
   useEffect(() => {
-      loadStudents()
-    }, [page])
+    loadStudents()
+  }, [page])
 
-    useEffect(() => {
-      const loadPrograms = async () => {
-        try {
-          const data = await fetchColleges(page) 
-          setTotalColleges(data.total)
-        } catch (error) {
-          console.error("Failed to load colleges:", error)
-        }
+  useEffect(() => {
+    const loadColleges = async () => {
+      try {
+        const data = await fetchColleges(page) 
+        setTotalColleges(data.total)
+      } catch (error) {
+        console.error("Failed to load colleges:", error)
       }
-      loadPrograms()
-    }, [])
+    }
+    loadColleges()
+  }, [])
 
-    useEffect(() => {
-      const loadPrograms = async () => {
-        try {
-          const data = await fetchPrograms(page) 
-          setTotalPrograms(data.total)
-        } catch (error) {
-          console.error("Failed to load programs:", error)
-        }
+  useEffect(() => {
+    const loadPrograms = async () => {
+      try {
+        const data = await fetchPrograms(page) 
+        setTotalPrograms(data.total)
+      } catch (error) {
+        console.error("Failed to load programs:", error)
       }
-      loadPrograms()
-    }, [])
+    }
+    loadPrograms()
+  }, [])
 
   return (
     <div className="container mx-auto py-1">
@@ -149,12 +155,22 @@ export default function StudentsPage() {
             return (
               <div className="transition-opacity duration-300 opacity-100">
                 <DataTable 
-                  columns={StudentColumns} 
+                  columns={StudentColumns(openEditDialog)} 
                   data={filteredData}
                   page={page}
                   totalPages={totalPages}
                   setPage={setPage}
                 />
+
+                {selectedStudent && (
+                  <EditStudentDialog
+                    student={selectedStudent ?? { studentID: "", firstName: "", lastName: "", programCode: "", yearLevel: "", gender: "" }}
+                    onStudentUpdated={() => {
+                      loadStudents()
+                      setSelectedStudent(null)
+                    }}
+                  />
+                )}
               </div>
             )
           })()

@@ -48,4 +48,33 @@ export const createCollege = async (collegeCode: string, collegeName: string) =>
   return await res.json()
 }
 
+export async function fetchCollege(collegeCode: string): Promise<College> {
+  const response = await fetch(`http://127.0.0.1:5000/api/colleges/${collegeCode}`)
+  if (!response.ok) {
+    console.error("Fetch failed with status:", response.status)
+    throw new Error("Failed to fetch college")
+  }
+  const data = await response.json()
+  console.log("Fetched college:", data)
+  return data
+}
+
+export async function updateCollege(originalCode: string, collegeCode: string, collegeName: string): Promise<College> {
+  const response = await fetch(`http://127.0.0.1:5000/api/colleges/${originalCode}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ collegeCode, collegeName }),
+  })
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update college")
+  }
+  
+  return data.college
+}
+
+
+
+
 

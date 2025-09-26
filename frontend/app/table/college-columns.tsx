@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { EditCollegeDialog } from "../(dashboard)/colleges/edit-dialog"
 import { DeleteCollegeDialog } from "../(dashboard)/colleges/delete-confirmation"
 import {
   DropdownMenu,
@@ -13,13 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SwapVertSharp as SortIcon } from "@mui/icons-material"
+import { EditNoteSharp as EditIcon } from '@mui/icons-material'
 
 export type College = {
   collegeCode: string
   collegeName: string
 }
 
-export const CollegeColumns: ColumnDef<College>[] = [
+export const CollegeColumns = (setIsOpen: (college: College) => void): ColumnDef<College>[] => [
   {
     accessorKey: "collegeCode",
     header: ({ column }) => (
@@ -63,7 +63,14 @@ export const CollegeColumns: ColumnDef<College>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <EditCollegeDialog college={college} />
+            <Button
+              variant="ghost"
+              className="w-full flex justify-between"
+              onClick={() => setIsOpen(college)}
+            >
+              <span>Edit</span>
+              <EditIcon className="h-4 w-4 text-muted-foreground" />
+            </Button>
             <DeleteCollegeDialog college={college} />
           </DropdownMenuContent>
         </DropdownMenu>

@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { EditStudentDialog } from "../(dashboard)/students/edit-dialog"
 import { DeleteStudentDialog } from "../(dashboard)/students/delete-confirmation"
 import {
   DropdownMenu,
@@ -12,9 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    SwapVertSharp as SortIcon
-} from '@mui/icons-material'
+import { SwapVertSharp as SortIcon } from "@mui/icons-material"
+import { EditNoteSharp as EditIcon } from '@mui/icons-material'
 
 
 export type Student = {
@@ -26,7 +24,7 @@ export type Student = {
     gender: "Female" | "Male"
 }
 
-export const StudentColumns: ColumnDef<Student>[] = [
+export const StudentColumns = (setIsOpen: (student: Student) => void): ColumnDef<Student>[] => [
     {
         accessorKey: "studentID",
         header: ({ column }) => {
@@ -127,7 +125,14 @@ export const StudentColumns: ColumnDef<Student>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <EditStudentDialog student={student} />
+            <Button
+              variant="ghost"
+              className="w-full flex justify-between"
+              onClick={() => setIsOpen(student)}
+            >
+              <span>Edit</span>
+              <EditIcon className="h-4 w-4 text-muted-foreground" />
+            </Button>
             <DeleteStudentDialog student={student} />
           </DropdownMenuContent>
         </DropdownMenu>

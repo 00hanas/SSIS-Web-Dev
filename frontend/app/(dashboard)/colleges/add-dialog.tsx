@@ -120,6 +120,7 @@ export function AddCollegeDialog({ onCollegeAdded }: AddCollegeDialogProps) {
       <EntityConfirmationDialog
         entityType="College"
         entity={{ code: addedCollege.collegeCode, name: addedCollege.collegeName }}
+        actionType="added"
         onClose={() => setAddedCollege(null)}
       />
     )}

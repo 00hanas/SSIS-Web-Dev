@@ -30,7 +30,7 @@ export const fetchProgramsForDropdown = async (): Promise<Program[]> => {
   }
   const data = await res.json()
 
-  return data.colleges
+  return data.programs
 }
 
 export const createProgram = async (programCode: string, programName: string, collegeCode: string) => {
@@ -46,4 +46,30 @@ export const createProgram = async (programCode: string, programName: string, co
   }
 
   return await res.json()
+}
+
+export async function fetchProgram(programCode: string): Promise<Program> {
+  const response = await fetch(`http://127.0.0.1:5000/api/programs/${programCode}`)
+  if (!response.ok) {
+    console.error("Fetch failed with status:", response.status)
+    throw new Error("Failed to fetch program")
+  }
+  const data = await response.json()
+  console.log("Fetched program:", data)
+  return data
+}
+
+export async function updateProgram(originalCode: string, programCode: string, programName: string, collegeCode: string): Promise<Program> {
+  const response = await fetch(`http://127.0.0.1:5000/api/programs/${originalCode}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ programCode, programName, collegeCode }),
+  })
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update program")
+  }
+
+  return data.program
 }

@@ -5,6 +5,7 @@ from app.forms.program_form import ProgramForm
 
 program_bp = Blueprint("program_bp", __name__, url_prefix="/api/programs")
 
+#add
 @program_bp.route('/create', methods=['POST'])
 def create_program():
     form = ProgramForm(request.get_json())
@@ -23,19 +24,36 @@ def create_program():
 
     return jsonify({'message': 'Program created', 'program': program.serialize()}), 201
 
+#edit (for pre-filled data)
 @program_bp.route('/<programCode>', methods=['GET'])
 def get_program(programCode):
     program = Program.query.get_or_404(programCode)
     return jsonify(program.serialize())
 
+#update
 @program_bp.route('/<programCode>', methods=['PUT'])
 def update_program(programCode):
     program = Program.query.get_or_404(programCode)
     data = request.get_json()
-    for key, value in data.items():
-        setattr(program, key, value)
+    form = ProgramForm(data)
+
+    if not form.is_valid():
+        return jsonify({"error": form.errors[0]}), 400
+    
+    if form.programCode.lower() != program.programCode.lower():
+        existing = Program.query.filter(
+            db.func.lower(Program.programCode) == form.programCode.lower(),
+            db.func.lower(Program.programCode) != program.programCode.lower()
+        ).first()
+        if existing:
+            return jsonify({"error": "Program code already exists"}), 409
+        
+    program.programCode = form.programCode
+    program.programName = form.programName
+    program.collegeCode = form.collegeCode
     db.session.commit()
-    return jsonify({'message': 'Program updated'})
+
+    return jsonify({'message': 'Program updated', 'program': program.serialize()})
 
 @program_bp.route('/<programCode>', methods=['DELETE'])
 def delete_program(programCode):

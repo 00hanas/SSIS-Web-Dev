@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -9,71 +9,152 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { EditNoteSharp as EditIcon } from '@mui/icons-material'
+import { fetchCollege, updateCollege } from "@/lib/college-api"
+import { College } from "../../table/college-columns"
+import { EntityConfirmationDialog } from "@/components/entity-confirmation-dialog"
 
 type EditCollegeDialogProps = {
   college: {
     collegeCode: string
     collegeName: string
   }
+  onCollegeUpdated?: () => void
 }
 
-export function EditCollegeDialog({ college }: EditCollegeDialogProps) {
+export function EditCollegeDialog({ college, onCollegeUpdated }: EditCollegeDialogProps) {
   const [collegeCode, setCcode] = useState(college.collegeCode)
   const [collegeName, setName] = useState(college.collegeName)
+  const [updatedCollege, setUpdatedCollege] = useState<College | null>(null)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [isOpen, setIsOpen] = useState(false)
 
-  const handleEditCollege = () => {
-    console.log("Updated College Code:", collegeCode)
-    console.log("Updated College Name:", collegeName)
+  useEffect(() => {
+    if (college?.collegeCode) {
+      setIsOpen(true)
+      setCcode(college.collegeCode)
+      setName(college.collegeName)
+      setErrorMessage("")
+    }
+  }, [college.collegeCode])
+
+  useEffect(() => {
+    if (isOpen) {
+      const loadCollegeData = async () => {
+        try {
+          const data = await fetchCollege(college.collegeCode)
+          setCcode(data.collegeCode)
+          setName(data.collegeName)
+        } catch (error) {
+          console.error("Failed to fetch college data:", error)
+        }
+      }
+      loadCollegeData()
+    }
+  }, [isOpen, college.collegeCode])
+
+  const handleEditCollege = async () => {
+    const originalCode = college.collegeCode
+
+    if (!collegeCode.trim() || !collegeName.trim()) {
+      setErrorMessage("Please fill in both fields.")
+      return
+    }
+
+    if (
+      collegeCode.trim() === originalCode.trim() &&
+      collegeName.trim() === college.collegeName.trim()
+    ) {
+      setErrorMessage("No changes detected.")
+      return
+    }
+
+    try {
+      const response = await updateCollege(originalCode, collegeCode, collegeName)
+      setUpdatedCollege(response)
+      setErrorMessage("")
+      setIsOpen(false)
+    } catch (error: any) {
+      if (error.message === "College code already exists") {
+        setErrorMessage(`College Code (${collegeCode}) is already taken.`)
+      } else if (error.message === "Missing required fields") {
+        setErrorMessage("Please fill in both College Code and College Name.")
+      } else {
+        setErrorMessage("Something went wrong. Try again.")
+      }
+    }
+  }
+
+  const resetForm = () => {
+    setCcode(college.collegeCode)
+    setName(college.collegeName)
+    setErrorMessage("")
+  }
+
+  const handleDialogClose = () => {
+    resetForm()
+    setIsOpen(false)
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full flex justify-between">
-            <span>Edit</span>
-            <EditIcon className="h-4 w-4 text-muted-foreground" />
-        </Button>
-        </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit College</DialogTitle>
-          <DialogDescription>
-            Update the fields below to modify this college.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="collegeCode">College Code</Label>
-            <Input
-              id="collegeCode"
-              value={collegeCode}
-              onChange={(e) => setCcode(e.target.value)}
-            />
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) handleDialogClose()
+        else setIsOpen(true)
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit College</DialogTitle>
+            <DialogDescription>
+              Update the fields below to modify this college.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="collegeCode">College Code</Label>
+              <Input
+                id="collegeCode"
+                value={collegeCode}
+                onChange={(e) => setCcode(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="collegeName">College Name</Label>
+              <Input
+                id="collegeName"
+                value={collegeName}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            {errorMessage && (
+              <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
+            )}
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="collegeName">College Name</Label>
-            <Input
-              id="collegeName"
-              value={collegeName}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary">Cancel</Button>
-          </DialogClose>
-          <Button type="button" onClick={handleEditCollege}>
-            Save Changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="secondary">Cancel</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleEditCollege}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {updatedCollege && (
+        <EntityConfirmationDialog
+          entityType="College"
+          entity={{ code: updatedCollege.collegeCode, name: updatedCollege.collegeName }}
+          actionType="updated"
+          onClose={() => {
+            setUpdatedCollege(null)
+            onCollegeUpdated?.()
+          }}
+        />
+      )}
+    </>
   )
 }

@@ -5,6 +5,7 @@ from app.forms.student_form import StudentForm
 
 student_bp = Blueprint("student_bp", __name__, url_prefix="/api/students")
 
+#add
 @student_bp.route('/create', methods=['POST'])
 def create_student():
     form = StudentForm(request.get_json())
@@ -23,19 +24,39 @@ def create_student():
 
     return jsonify({'message': 'Student created', 'student': student.serialize()}), 201
 
+#edit (for pre-filled data)
 @student_bp.route('/<studentID>', methods=['GET'])
 def get_student(studentID):
     student = Student.query.get_or_404(studentID)
     return jsonify(student.serialize())
 
+#update
 @student_bp.route('/<studentID>', methods=['PUT'])
 def update_student(studentID):
     student = Student.query.get_or_404(studentID)
     data = request.get_json()
-    for key, value in data.items():
-        setattr(student, key, value)
+    form = StudentForm(data)
+
+    if not form.is_valid():
+        return jsonify({"error": form.errors[0]}), 400
+    
+    if form.studentID.lower() != student.studentID.lower():
+        existing = Student.query.filter(
+            db.func.lower(Student.studentID) == form.studentID.lower(),
+            db.func.lower(Student.studentID) != student.studentID.lower()
+        ).first()
+        if existing:
+            return jsonify({"error": "Student ID already exists"}), 409
+        
+    student.studentID = form.studentID
+    student.firstName = form.firstName
+    student.lastName = form.lastName
+    student.programCode = form.programCode
+    student.yearLevel = form.yearLevel
+    student.gender = form.gender
     db.session.commit()
-    return jsonify({'message': 'Student updated'})
+
+    return jsonify({'message': 'Student updated', 'student': student.serialize()})
 
 @student_bp.route('/<studentID>', methods=['DELETE'])
 def delete_student(studentID):
@@ -68,3 +89,4 @@ def list_students():
         'pages': students.pages,
         'current_page': students.page
     })
+
