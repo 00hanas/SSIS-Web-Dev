@@ -73,22 +73,34 @@ def delete_college(collegeCode):
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+#page display with search and sort
 @college_bp.route('', methods=['GET'])
 def list_colleges():
     query = College.query
 
-    search = request.args.get('search')
+    search = request.args.get('search', '').lower()
+    search_by = request.args.get('searchBy', 'all')
     if search:
-        query = query.filter(College.collegeName.ilike(f'%{search}%'))
+        if search_by == 'collegeCode':
+            query = query.filter(College.collegeCode.ilike(f'%{search}%'))
+        elif search_by == 'collegeName':
+            query = query.filter(College.collegeName.ilike(f'%{search}%'))
+        else:
+            query = query.filter(
+                db.or_(
+                    College.collegeCode.ilike(f'%{search}%'),
+                    College.collegeName.ilike(f'%{search}%')
+                )
+            )
 
-    sort_by = request.args.get('sort_by', 'collegeName')
+    sort_by = request.args.get('sort_by', 'collegeCode')
     order = request.args.get('order', 'asc')
     if hasattr(College, sort_by):
         sort_column = getattr(College, sort_by)
         query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
     page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
+    per_page = int(request.args.get('per_page', 20))
     colleges = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({
@@ -97,6 +109,7 @@ def list_colleges():
         'pages': colleges.pages,
         'current_page': colleges.page
     })
+
 
 @college_bp.route('/dropdown', methods=['GET'])
 def list_colleges_for_dropdown():

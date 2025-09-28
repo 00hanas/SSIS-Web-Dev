@@ -32,6 +32,8 @@ export default function CollegesPage() {
   const [searchBy, setSearchBy] = useState<"all" | "collegeCode" | "collegeName">("all")
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null)
   const [collegeToDelete, setCollegeToDelete] = useState<College | null>(null)
+  const [sortBy, setSortBy] = useState<"collegeCode" | "collegeName">("collegeCode")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const openEditDialog = (college: College) => {
     setSelectedCollege(college)
@@ -39,45 +41,53 @@ export default function CollegesPage() {
 
   const loadColleges = async () => {
     setIsLoading(true)
-      try {
-        const data = await fetchColleges(page)
-        setColleges(data.colleges)
-        setTotalPages(data.pages)
-        setTotalColleges(data.total)
-      } catch (error) {
-        console.error("Failed to load colleges:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    try {
+      const data = await fetchColleges(page, 15, search, searchBy, sortBy, sortOrder)
+      setColleges(data.colleges)
+      setTotalPages(data.pages)
+      setTotalColleges(data.total)
+    } catch (error) {
+      console.error("Failed to load colleges:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
-      loadColleges()
-    }, [page])
+    loadColleges()
+  }, [page])
 
-    useEffect(() => {
-      const loadPrograms = async () => {
-        try {
-          const data = await fetchPrograms(page) 
-          setTotalPrograms(data.total)
-        } catch (error) {
-          console.error("Failed to load programs:", error)
-        }
+  useEffect(() => {
+    loadColleges()
+  }, [search, searchBy])
+
+  useEffect(() => {
+    loadColleges()
+  }, [sortBy, sortOrder])
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      try {
+        const data = await fetchPrograms(page) 
+        setTotalPrograms(data.total)
+      } catch (error) {
+        console.error("Failed to load programs:", error)
       }
-      loadPrograms()
+    }
+    loadPrograms()
     }, [])
 
-    useEffect(() => {
-      const loadStudents = async () => {
-        try {
-          const data = await fetchStudents(page) 
-          setTotalStudents(data.total)
-        } catch (error) {
-          console.error("Failed to load students:", error)
-        }
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        const data = await fetchStudents(page) 
+        setTotalStudents(data.total)
+      } catch (error) {
+        console.error("Failed to load students:", error)
       }
-      loadStudents()
-    }, [])
+    }
+    loadStudents()
+  }, [])
 
   return (
     <div className="container mx-auto py-1">
@@ -126,58 +136,35 @@ export default function CollegesPage() {
         ) : colleges.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">Loading colleges...</div>
         ) : (
-          (() => {
-            const filteredData = colleges.filter((college) => {
-              if (searchBy === "all") {
-                return Object.values(college)
-                  .join(" ")
-                  .toLowerCase()
-                  .includes(search.toLowerCase())
-              }
+          <div className="transition-opacity duration-300 opacity-100">
+            <DataTable 
+              columns={CollegeColumns(openEditDialog, setCollegeToDelete, sortBy, sortOrder, setSortBy, setSortOrder)} 
+              data={colleges}
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
+            />
 
-              const keyMap = {
-                collegeCode: "collegeCode",
-                collegeName: "collegeName"
-              }
+            {selectedCollege && (
+              <EditCollegeDialog
+                college={selectedCollege ?? { collegeCode: "", collegeName: "" }}
+                onCollegeUpdated={() => {
+                  loadColleges()
+                  setSelectedCollege(null)
+                }}
+              />
+            )}
 
-              const key = keyMap[searchBy]
-              const value = college[key as keyof College]
-              return value?.toString().toLowerCase().includes(search.toLowerCase())
-            })
-
-            return (
-              <div className="transition-opacity duration-300 opacity-100">
-                <DataTable 
-                  columns={CollegeColumns(openEditDialog, setCollegeToDelete)} 
-                  data={filteredData}
-                  page={page}
-                  totalPages={totalPages}
-                  setPage={setPage}
-                />
-
-                {selectedCollege && (
-                  <EditCollegeDialog
-                    college={selectedCollege ?? { collegeCode: "", collegeName: "" }}
-                    onCollegeUpdated={() => {
-                      loadColleges()
-                      setSelectedCollege(null)
-                    }}
-                  />
-                )}
-
-                {collegeToDelete && (
-                  <DeleteCollegeDialog
-                    college={collegeToDelete}
-                    onCollegeDeleted={() => {
-                      loadColleges()
-                      setCollegeToDelete(null)
-                    }}
-                  />
-                )}
-
-              </div>
-            )
-          })()
+            {collegeToDelete && (
+              <DeleteCollegeDialog
+                college={collegeToDelete}
+                onCollegeDeleted={() => {
+                  loadColleges()
+                  setCollegeToDelete(null)
+                }}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>

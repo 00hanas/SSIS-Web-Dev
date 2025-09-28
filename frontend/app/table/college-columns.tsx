@@ -21,14 +21,26 @@ export type College = {
 
 export const CollegeColumns = (
   setEditDialog: (college: College) => void,
-  setDeleteDialog: (college: College) => void
+  setDeleteDialog: (college: College) => void,
+  sortBy: "collegeCode" | "collegeName",
+  sortOrder: "asc" | "desc",
+  setSortBy: (key: "collegeCode" | "collegeName") => void,
+  setSortOrder: (order: "asc" | "desc") => void
 ): ColumnDef<College>[] => [
   {
     accessorKey: "collegeCode",
-    header: ({ column }) => (
+    size: 150,
+    header: () => (
       <Button
         variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "collegeCode") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("collegeCode")
+            setSortOrder("asc")
+          }
+        }}
       >
         College Code
         <SortIcon className="ml-2 h-4 w-4" />
@@ -39,10 +51,17 @@ export const CollegeColumns = (
   },
   {
     accessorKey: "collegeName",
-    header: ({ column }) => (
+    header: () => (
       <Button
         variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "collegeName") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("collegeName")
+            setSortOrder("asc")
+          }
+        }}
       >
         College Name
         <SortIcon className="ml-2 h-4 w-4" />
@@ -53,9 +72,11 @@ export const CollegeColumns = (
   },
   {
     id: "actions",
+    size:100,
     cell: ({ row }) => {
       const college = row.original
       return (
+        <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-5 w-8 p-0">
@@ -84,6 +105,7 @@ export const CollegeColumns = (
             </Button>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       )
     },
   },

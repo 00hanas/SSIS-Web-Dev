@@ -2,22 +2,36 @@ import { College } from "@/app/table/college-columns"
 
 export const fetchColleges = async (
   page: number = 1,
-  perPage: number = 10
+  perPage: number = 15,
+  search: string = "",
+  searchBy: "all" | "collegeCode" | "collegeName" = "all",
+  sortBy: "collegeCode" | "collegeName" = "collegeCode",
+  order: "asc" | "desc" = "asc"
 ): Promise<{
   colleges: College[]
   total: number
   pages: number
   current_page: number
 }> => {
-  const res = await fetch(`http://127.0.0.1:5000/api/colleges?page=${page}&per_page=${perPage}`, {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString(),
+    search,
+    searchBy,
+    sort_by: sortBy,
+    order
+  })
+
+  const res = await fetch(`http://127.0.0.1:5000/api/colleges?${params.toString()}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     mode: 'cors'
   })
+
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
 
   const data = await res.json()
-  console.log("Total colleges:", data.total) 
+  console.log("Total colleges:", data.total)
   return data
 }
 
