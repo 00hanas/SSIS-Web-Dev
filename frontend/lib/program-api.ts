@@ -73,3 +73,16 @@ export async function updateProgram(originalCode: string, programCode: string, p
 
   return data.program
 }
+
+export async function deleteProgram(programCode: string) {
+  const response = await fetch(`http://127.0.0.1:5000/api/programs/${programCode}`, {
+    method: "DELETE",
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || "Failed to delete program")
+  }
+
+  return await response.json()
+}

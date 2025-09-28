@@ -11,5 +11,5 @@ class Program(db.Model):
         return {
             'programCode': self.programCode,
             'programName': self.programName,
-            'collegeCode': self.collegeCode
+            'collegeCode': self.collegeCode or "N/A"
         }

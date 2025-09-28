@@ -18,6 +18,7 @@ import { fetchStudents } from "@/lib/student-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchColleges } from "@/lib/college-api"
 import { EditStudentDialog } from "./edit-dialog"
+import { DeleteStudentDialog } from "./delete-dialog"
 
 
 export default function StudentsPage() {
@@ -31,6 +32,7 @@ export default function StudentsPage() {
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("all")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
 
   const openEditDialog = (student: Student) => {
     setSelectedStudent(student)
@@ -155,7 +157,7 @@ export default function StudentsPage() {
             return (
               <div className="transition-opacity duration-300 opacity-100">
                 <DataTable 
-                  columns={StudentColumns(openEditDialog)} 
+                  columns={StudentColumns(openEditDialog, setStudentToDelete)} 
                   data={filteredData}
                   page={page}
                   totalPages={totalPages}
@@ -168,6 +170,16 @@ export default function StudentsPage() {
                     onStudentUpdated={() => {
                       loadStudents()
                       setSelectedStudent(null)
+                    }}
+                  />
+                )}
+
+                {studentToDelete && (
+                  <DeleteStudentDialog
+                    student={studentToDelete}
+                    onStudentDeleted={() => {
+                      loadStudents()
+                      setStudentToDelete(null)
                     }}
                   />
                 )}

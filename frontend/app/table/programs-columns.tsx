@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DeleteProgramDialog } from "../(dashboard)/programs/delete-confirmation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SwapVertSharp as SortIcon } from "@mui/icons-material"
 import { EditNoteSharp as EditIcon } from '@mui/icons-material'
+import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
 
 export type Program = {
     programCode: string
@@ -20,7 +20,10 @@ export type Program = {
     collegeCode: string
 }
 
-export const ProgramColumns = (setIsOpen: (program: Program) => void): ColumnDef<Program>[] => [
+export const ProgramColumns = (
+  setEditDialog: (program: Program) => void,
+  setDeleteDialog: (program: Program) => void
+): ColumnDef<Program>[] => [
     {
         accessorKey: "programCode",
         header: ({ column }) => {
@@ -49,19 +52,25 @@ export const ProgramColumns = (setIsOpen: (program: Program) => void): ColumnDef
       )
     },
     },
-    {
-        accessorKey: "collegeCode",
-        header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          College Code
-          <SortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
+   {
+      accessorKey: "collegeCode",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            College Code
+            <SortIcon className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => {
+        const value = row.getValue("collegeCode")
+        return value === "N/A"
+          ? <span className="text-muted-foreground italic">N/A</span>
+          : value
+      }
     },
     {
     id: "actions",
@@ -82,12 +91,19 @@ export const ProgramColumns = (setIsOpen: (program: Program) => void): ColumnDef
             <Button
               variant="ghost"
               className="w-full flex justify-between"
-              onClick={() => setIsOpen(program)}
+              onClick={() => setEditDialog(program)}
             >
               <span>Edit</span>
               <EditIcon className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <DeleteProgramDialog program={program} />
+            <Button
+              variant="ghost"
+              className="w-full flex justify-between"
+              onClick={() => setDeleteDialog(program)}
+            >
+              <span>Delete</span>
+              <DeleteIcon className="h-4 w-4 text-muted-foreground" />
+            </Button>
           </DropdownMenuContent>
         </DropdownMenu>
       )

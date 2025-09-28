@@ -1,9 +1,8 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
+import { Delete, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DeleteCollegeDialog } from "../(dashboard)/colleges/delete-confirmation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,13 +12,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SwapVertSharp as SortIcon } from "@mui/icons-material"
 import { EditNoteSharp as EditIcon } from '@mui/icons-material'
+import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
 
 export type College = {
   collegeCode: string
   collegeName: string
 }
 
-export const CollegeColumns = (setIsOpen: (college: College) => void): ColumnDef<College>[] => [
+export const CollegeColumns = (
+  setEditDialog: (college: College) => void,
+  setDeleteDialog: (college: College) => void
+): ColumnDef<College>[] => [
   {
     accessorKey: "collegeCode",
     header: ({ column }) => (
@@ -66,12 +69,19 @@ export const CollegeColumns = (setIsOpen: (college: College) => void): ColumnDef
             <Button
               variant="ghost"
               className="w-full flex justify-between"
-              onClick={() => setIsOpen(college)}
+              onClick={() => setEditDialog(college)}
             >
               <span>Edit</span>
               <EditIcon className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <DeleteCollegeDialog college={college} />
+            <Button
+              variant="ghost"
+              className="w-full flex justify-between"
+              onClick={() => setDeleteDialog(college)}
+            >
+              <span>Delete</span>
+              <DeleteIcon className="h-4 w-4 text-muted-foreground" />
+            </Button>
           </DropdownMenuContent>
         </DropdownMenu>
       )

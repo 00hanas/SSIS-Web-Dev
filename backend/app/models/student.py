@@ -16,7 +16,7 @@ class Student(db.Model):
             'studentID': self.studentID,
             'firstName': self.firstName,
             'lastName': self.lastName,
-            'programCode': self.programCode,
+            'programCode': self.programCode or "N/A",
             'yearLevel': self.yearLevel,
             'gender': self.gender
         }

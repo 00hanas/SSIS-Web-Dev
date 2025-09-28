@@ -58,12 +58,13 @@ def update_student(studentID):
 
     return jsonify({'message': 'Student updated', 'student': student.serialize()})
 
+#delete
 @student_bp.route('/<studentID>', methods=['DELETE'])
 def delete_student(studentID):
     student = Student.query.get_or_404(studentID)
     db.session.delete(student)
     db.session.commit()
-    return jsonify({'message': 'Student deleted'})
+    return jsonify({'message': f'Student {studentID} deleted'})
 
 @student_bp.route('', methods=['GET'])
 def list_students():

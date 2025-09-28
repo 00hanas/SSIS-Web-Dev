@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DeleteStudentDialog } from "../(dashboard)/students/delete-confirmation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SwapVertSharp as SortIcon } from "@mui/icons-material"
 import { EditNoteSharp as EditIcon } from '@mui/icons-material'
+import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
 
 
 export type Student = {
@@ -24,7 +24,10 @@ export type Student = {
     gender: "Female" | "Male"
 }
 
-export const StudentColumns = (setIsOpen: (student: Student) => void): ColumnDef<Student>[] => [
+export const StudentColumns = (
+  setEditDialog: (student: Student) => void,
+  setDeleteDialog: (student: Student) => void
+): ColumnDef<Student>[] => [
     {
         accessorKey: "studentID",
         header: ({ column }) => {
@@ -80,6 +83,12 @@ export const StudentColumns = (setIsOpen: (student: Student) => void): ColumnDef
         </Button>
       )
     },
+    cell: ({ row }) => {
+        const value = row.getValue("programCode")
+        return value === "N/A"
+          ? <span className="text-muted-foreground italic">N/A</span>
+          : value
+      }
     },
     {
         accessorKey: "yearLevel",
@@ -128,12 +137,19 @@ export const StudentColumns = (setIsOpen: (student: Student) => void): ColumnDef
             <Button
               variant="ghost"
               className="w-full flex justify-between"
-              onClick={() => setIsOpen(student)}
+              onClick={() => setEditDialog(student)}
             >
               <span>Edit</span>
               <EditIcon className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <DeleteStudentDialog student={student} />
+            <Button
+              variant="ghost"
+              className="w-full flex justify-between"
+              onClick={() => setDeleteDialog(student)}
+            >
+              <span>Delete</span>
+              <DeleteIcon className="h-4 w-4 text-muted-foreground" />
+            </Button>
           </DropdownMenuContent>
         </DropdownMenu>
       )

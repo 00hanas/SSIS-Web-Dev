@@ -18,6 +18,7 @@ import { fetchColleges } from "@/lib/college-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
 import { EditCollegeDialog } from "./edit-dialog"
+import { DeleteCollegeDialog } from "./delete-dialog"
 
 export default function CollegesPage() {
   const [colleges, setColleges] = useState<College[]>([])
@@ -30,6 +31,7 @@ export default function CollegesPage() {
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "collegeCode" | "collegeName">("all")
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null)
+  const [collegeToDelete, setCollegeToDelete] = useState<College | null>(null)
 
   const openEditDialog = (college: College) => {
     setSelectedCollege(college)
@@ -146,7 +148,7 @@ export default function CollegesPage() {
             return (
               <div className="transition-opacity duration-300 opacity-100">
                 <DataTable 
-                  columns={CollegeColumns(openEditDialog)} 
+                  columns={CollegeColumns(openEditDialog, setCollegeToDelete)} 
                   data={filteredData}
                   page={page}
                   totalPages={totalPages}
@@ -162,6 +164,17 @@ export default function CollegesPage() {
                     }}
                   />
                 )}
+
+                {collegeToDelete && (
+                  <DeleteCollegeDialog
+                    college={collegeToDelete}
+                    onCollegeDeleted={() => {
+                      loadColleges()
+                      setCollegeToDelete(null)
+                    }}
+                  />
+                )}
+
               </div>
             )
           })()

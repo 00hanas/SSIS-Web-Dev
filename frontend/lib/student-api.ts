@@ -61,3 +61,16 @@ export async function updateStudent(originalCode: string, studentID: string, fir
 
   return data.student
 }
+
+export async function deleteStudent(studentID: string) {
+  const response = await fetch(`http://127.0.0.1:5000/api/students/${studentID}`, {
+    method: "DELETE",
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || "Failed to delete student")
+  }
+
+  return await response.json()
+}

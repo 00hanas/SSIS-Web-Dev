@@ -54,12 +54,24 @@ def update_college(collegeCode):
 
     return jsonify({'message': 'College updated', 'college': college.serialize()})
 
+#delete
+from app.models.program import Program
 @college_bp.route('/<collegeCode>', methods=['DELETE'])
 def delete_college(collegeCode):
     college = College.query.get_or_404(collegeCode)
-    db.session.delete(college)
-    db.session.commit()
-    return jsonify({'message': 'College deleted'})
+
+    try:
+        programs = Program.query.filter_by(collegeCode=collegeCode).all()
+        for program in programs:
+            program.collegeCode = None
+
+        db.session.delete(college)
+        db.session.commit()
+
+        return jsonify({'message': f'College {collegeCode} deleted and programs updated.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @college_bp.route('', methods=['GET'])
 def list_colleges():

@@ -55,12 +55,18 @@ def update_program(programCode):
 
     return jsonify({'message': 'Program updated', 'program': program.serialize()})
 
+#delete
+from app.models.student import Student
 @program_bp.route('/<programCode>', methods=['DELETE'])
 def delete_program(programCode):
     program = Program.query.get_or_404(programCode)
+    students = Student.query.filter_by(programCode=programCode).all()
+    for student in students:
+        student.programCode = None
+
     db.session.delete(program)
     db.session.commit()
-    return jsonify({'message': 'Program deleted'})
+    return jsonify({'message': f'Program {programCode} deleted and students updated'})
 
 @program_bp.route('', methods=['GET'])
 def list_programs():

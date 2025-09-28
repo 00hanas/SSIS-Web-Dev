@@ -18,6 +18,7 @@ import { fetchColleges } from "@/lib/college-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
 import { EditProgramDialog } from "./edit-dialog"
+import { DeleteProgramDialog } from "./delete-dialog"
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([])
@@ -30,6 +31,7 @@ export default function ProgramsPage() {
   const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<"all" | "programCode" | "programName" | "collegeCode">("all")
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null)
+  const [programToDelete, setProgramToDelete] = useState<Program | null>(null)
 
   const openEditDialog = (program: Program) => {
     setSelectedProgram(program)
@@ -148,7 +150,7 @@ export default function ProgramsPage() {
               return (
                 <div className="transition-opacity duration-300 opacity-100">
                   <DataTable 
-                    columns={ProgramColumns(openEditDialog)} 
+                    columns={ProgramColumns(openEditDialog, setProgramToDelete)} 
                     data={filteredData}
                     page={page}
                     totalPages={totalPages}
@@ -161,6 +163,16 @@ export default function ProgramsPage() {
                       onProgramUpdated={() => {
                         loadPrograms()
                         setSelectedProgram(null)
+                      }}
+                    />
+                  )}
+
+                  {programToDelete && (
+                    <DeleteProgramDialog
+                      program={programToDelete}
+                      onProgramDeleted={() => {
+                        loadPrograms()
+                        setProgramToDelete(null)
                       }}
                     />
                   )}

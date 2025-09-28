@@ -74,7 +74,21 @@ export async function updateCollege(originalCode: string, collegeCode: string, c
   return data.college
 }
 
+export async function deleteCollege(collegeCode: string) {
+  const res = await fetch(`http://127.0.0.1:5000/api/colleges/${collegeCode}`, {
+    method: "DELETE"
+  })
 
+  const contentType = res.headers.get("content-type")
+  if (!res.ok) {
+    if (contentType?.includes("application/json")) {
+      const error = await res.json()
+      throw new Error(error.error || "Failed to delete college")
+    } else {
+      throw new Error("Unexpected server error")
+    }
+  }
 
-
+  return await res.json()
+}
 
