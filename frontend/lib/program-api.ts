@@ -18,7 +18,7 @@ export const fetchPrograms = async (
     per_page: perPage.toString(),
     search,
     searchBy,
-    sort_by: sortBy,
+    sortBy: sortBy,
     order
   })
 

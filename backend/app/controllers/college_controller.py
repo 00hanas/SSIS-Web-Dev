@@ -94,10 +94,10 @@ def list_colleges():
                 )
             )
 
-    sort_by = request.args.get('sort_by', 'collegeCode')
+    sortBy = request.args.get('sortBy', 'collegeCode')
     order = request.args.get('order', 'asc')
-    if hasattr(College, sort_by):
-        sort_column = getattr(College, sort_by)
+    if hasattr(College, sortBy):
+        sort_column = getattr(College, sortBy)
         query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
     page = int(request.args.get('page', 1))

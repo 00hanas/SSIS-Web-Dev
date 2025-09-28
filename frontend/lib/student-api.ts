@@ -2,14 +2,27 @@ import { Student } from "@/app/table/student-columns"
 
 export const fetchStudents = async (
   page: number = 1,
-  perPage: number = 10,
+  perPage: number = 15,
+  search: string = "",
+  searchBy: "all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender" = "all",
+  sortBy: "all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender" = "lastName",
+  order: "asc" | "desc" = "asc"
 ): Promise<{ 
     students: Student[]
     total: number
     pages: number
     current_page: number 
 }> => {
-  const res = await fetch(`http://127.0.0.1:5000/api/students?page=${page}&per_page=${perPage}`, {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString(),
+    search,
+    searchBy,
+    sortBy: sortBy,
+    order
+  })
+
+  const res = await fetch(`http://127.0.0.1:5000/api/students?${params.toString()}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     mode: 'cors'

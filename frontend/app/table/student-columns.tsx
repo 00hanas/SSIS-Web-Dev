@@ -26,15 +26,27 @@ export type Student = {
 
 export const StudentColumns = (
   setEditDialog: (student: Student) => void,
-  setDeleteDialog: (student: Student) => void
+  setDeleteDialog: (student: Student) => void,
+  sortBy: "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender",
+  sortOrder: "asc" | "desc",
+  setSortBy: (key: "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender") => void,
+  setSortOrder: (order: "asc" | "desc") => void
 ): ColumnDef<Student>[] => [
     {
         accessorKey: "studentID",
-        header: ({ column }) => {
+        size:150,
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "studentID") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("studentID")
+              setSortOrder("asc")
+            }
+          }}
         >
           Student ID
           <SortIcon className="ml-2 h-4 w-4" />
@@ -44,11 +56,18 @@ export const StudentColumns = (
     },
     {
         accessorKey: "firstName",
-        header: ({ column }) => {
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "firstName") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("firstName")
+              setSortOrder("asc")
+            }
+          }}
         >
           First Name
           <SortIcon className="ml-2 h-4 w-4" />
@@ -58,11 +77,18 @@ export const StudentColumns = (
     },
     {
         accessorKey: "lastName",
-        header: ({ column }) => {
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "lastName") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("lastName")
+              setSortOrder("asc")
+            }
+          }}
         >
           Last Name
           <SortIcon className="ml-2 h-4 w-4" />
@@ -72,11 +98,18 @@ export const StudentColumns = (
     },
     {
         accessorKey: "programCode",
-        header: ({ column }) => {
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "programCode") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("programCode")
+              setSortOrder("asc")
+            }
+          }}
         >
           Program Code
           <SortIcon className="ml-2 h-4 w-4" />
@@ -92,11 +125,18 @@ export const StudentColumns = (
     },
     {
         accessorKey: "yearLevel",
-        header: ({ column }) => {
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "yearLevel") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("yearLevel")
+              setSortOrder("asc")
+            }
+          }}
         >
           Year Level
           <SortIcon className="ml-2 h-4 w-4" />
@@ -106,11 +146,18 @@ export const StudentColumns = (
     },
     {   
         accessorKey: "gender",
-        header: ({ column }) => {
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "gender") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("gender")
+              setSortOrder("asc")
+            }
+          }}
         >
           Gender
           <SortIcon className="ml-2 h-4 w-4" />
@@ -120,10 +167,12 @@ export const StudentColumns = (
     },
     {
     id: "actions",
+    size: 100,
     cell: ({ row }) => {
       const student = row.original
  
       return (
+        <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-5 w-8 p-0">
@@ -152,6 +201,7 @@ export const StudentColumns = (
             </Button>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       )
     },
   },

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.models.student import Student
 from app.extensions import db
 from app.forms.student_form import StudentForm
+from sqlalchemy import cast
 
 student_bp = Blueprint("student_bp", __name__, url_prefix="/api/students")
 
@@ -66,22 +67,46 @@ def delete_student(studentID):
     db.session.commit()
     return jsonify({'message': f'Student {studentID} deleted'})
 
+#page display with search and sort
 @student_bp.route('', methods=['GET'])
 def list_students():
     query = Student.query
 
-    search = request.args.get('search')
+    search = request.args.get('search', '').lower()
+    searchBy = request.args.get('searchBy', 'all')
     if search:
-        query = query.filter(Student.lastName.ilike(f'%{search}%'))
+        if searchBy == 'studentID':
+            query = query.filter(cast(Student.studentID, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'firstName':
+            query = query.filter(cast(Student.firstName, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'lastName':
+            query = query.filter(cast(Student.lastName, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'programCode':
+            query = query.filter(cast(Student.programCode, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'yearLevel':
+            query = query.filter(cast(Student.yearLevel, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'gender':
+            query = query.filter(cast(Student.gender, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'all':
+            query = query.filter(
+                db.or_(
+                    cast(Student.studentID, db.String).ilike(f'%{search}%'),
+                    cast(Student.firstName, db.String).ilike(f'%{search}%'),
+                    cast(Student.lastName, db.String).ilike(f'%{search}%'),
+                    cast(Student.programCode, db.String).ilike(f'%{search}%'),
+                    cast(Student.yearLevel, db.String).ilike(f'%{search}%'),
+                    cast(Student.gender, db.String).ilike(f'%{search}%')
+                )
+            )
 
-    sort_by = request.args.get('sort_by', 'lastName')
+    sortBy = request.args.get('sortBy', 'lastName')
     order = request.args.get('order', 'asc')
-    if hasattr(Student, sort_by):
-        sort_column = getattr(Student, sort_by)
+    if hasattr(Student, sortBy):
+        sort_column = getattr(Student, sortBy)
         query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
     page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
+    per_page = int(request.args.get('per_page', 15))
     students = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({

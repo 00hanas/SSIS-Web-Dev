@@ -92,10 +92,10 @@ def list_programs():
                 )
             )
     
-    sort_by = request.args.get('sort_by', 'programCode')
+    sortBy = request.args.get('sortBy', 'programCode')
     order = request.args.get('order', 'asc')
-    if hasattr(Program, sort_by):
-        sort_column = getattr(Program, sort_by)
+    if hasattr(Program, sortBy):
+        sort_column = getattr(Program, sortBy)
         query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
     page = int(request.args.get('page', 1))

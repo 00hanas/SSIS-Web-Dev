@@ -33,6 +33,8 @@ export default function StudentsPage() {
   const [searchBy, setSearchBy] = useState<"all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("all")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
+  const [sortBy, setSortBy] = useState<"studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("lastName")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const openEditDialog = (student: Student) => {
     setSelectedStudent(student)
@@ -41,7 +43,7 @@ export default function StudentsPage() {
   const loadStudents = async () => {
     setIsLoading(true)
     try {
-      const data = await fetchStudents(page)
+      const data = await fetchStudents(page, 15, search, searchBy, sortBy, sortOrder)
       setStudents(data.students)
       setTotalPages(data.pages)
       setTotalStudents(data.total)
@@ -57,9 +59,17 @@ export default function StudentsPage() {
   }, [page])
 
   useEffect(() => {
+    loadStudents()
+  }, [search, searchBy])
+
+  useEffect(() => {
+    loadStudents()
+  }, [sortBy, sortOrder])
+
+  useEffect(() => {
     const loadColleges = async () => {
       try {
-        const data = await fetchColleges(page) 
+        const data = await fetchColleges() 
         setTotalColleges(data.total)
       } catch (error) {
         console.error("Failed to load colleges:", error)
@@ -71,7 +81,7 @@ export default function StudentsPage() {
   useEffect(() => {
     const loadPrograms = async () => {
       try {
-        const data = await fetchPrograms(page) 
+        const data = await fetchPrograms() 
         setTotalPrograms(data.total)
       } catch (error) {
         console.error("Failed to load programs:", error)
@@ -126,68 +136,42 @@ export default function StudentsPage() {
 
           <AddStudentDialog onStudentAdded={loadStudents} />
         </div>
-{isLoading ? (
-          <div className="text-center py-6 text-muted-foreground">Loading students...</div>
-        ) : students.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">Loading students...</div>
-        ) : (
-          (() => {
-            const filteredData = students.filter((student) => {
-              if (searchBy === "all") {
-                return Object.values(student)
-                  .join(" ")
-                  .toLowerCase()
-                  .includes(search.toLowerCase())
-              }
+          {isLoading ? (
+            <div className="text-center py-6 text-muted-foreground">Loading students...</div>
+          ) : students.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">No data.</div>
+          ) : (
+            <div className="transition-opacity duration-300 opacity-100">
+              <DataTable 
+                columns={StudentColumns(openEditDialog, setStudentToDelete, sortBy, sortOrder, setSortBy, setSortOrder)} 
+                data={students}
+                page={page}
+                totalPages={totalPages}
+                setPage={setPage}
+              />
 
-              const keyMap = {
-                studentID: "studentID",
-                firstName: "firstName",
-                lastName: "lastName",
-                programCode: "programCode",
-                yearLevel: "yearLevel",
-                gender: "gender"
-              }
-
-              const key = keyMap[searchBy]
-              const value = student[key as keyof Student]
-              return value?.toString().toLowerCase().includes(search.toLowerCase())
-            })
-
-            return (
-              <div className="transition-opacity duration-300 opacity-100">
-                <DataTable 
-                  columns={StudentColumns(openEditDialog, setStudentToDelete)} 
-                  data={filteredData}
-                  page={page}
-                  totalPages={totalPages}
-                  setPage={setPage}
+              {selectedStudent && (
+                <EditStudentDialog
+                  student={selectedStudent ?? { studentID: "", firstName: "", lastName: "", programCode: "", yearLevel: "", gender: "" }}
+                  onStudentUpdated={() => {
+                    loadStudents()
+                    setSelectedStudent(null)
+                  }}
                 />
+              )}
 
-                {selectedStudent && (
-                  <EditStudentDialog
-                    student={selectedStudent ?? { studentID: "", firstName: "", lastName: "", programCode: "", yearLevel: "", gender: "" }}
-                    onStudentUpdated={() => {
-                      loadStudents()
-                      setSelectedStudent(null)
-                    }}
-                  />
-                )}
-
-                {studentToDelete && (
-                  <DeleteStudentDialog
-                    student={studentToDelete}
-                    onStudentDeleted={() => {
-                      loadStudents()
-                      setStudentToDelete(null)
-                    }}
-                  />
-                )}
-              </div>
-            )
-          })()
-        )}
-      </div>
+              {studentToDelete && (
+                <DeleteStudentDialog
+                  student={studentToDelete}
+                  onStudentDeleted={() => {
+                    loadStudents()
+                    setStudentToDelete(null)
+                  }}
+                />
+              )}
+            </div>
+          )}
+    </div>
     </div>
   )
 }

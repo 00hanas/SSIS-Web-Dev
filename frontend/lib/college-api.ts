@@ -18,7 +18,7 @@ export const fetchColleges = async (
     per_page: perPage.toString(),
     search,
     searchBy,
-    sort_by: sortBy,
+    sortBy: sortBy,
     order
   })
 
