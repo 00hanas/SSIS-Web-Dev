@@ -1,7 +1,7 @@
 "use client"
 
 import { CardDemographic } from "@/components/cards"
-import { ProgramColumns, Program } from "../../table/programs-columns"
+import { ProgramColumns, Program } from "../../table/program-columns"
 import { DataTable } from "../../table/data-table"
 import { AddProgramDialog } from "./add-dialog"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,8 @@ export default function ProgramsPage() {
   const [searchBy, setSearchBy] = useState<"all" | "programCode" | "programName" | "collegeCode">("all")
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null)
   const [programToDelete, setProgramToDelete] = useState<Program | null>(null)
+  const [sortBy, setSortBy] = useState<"programCode" | "programName" | "collegeCode">("programCode")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const openEditDialog = (program: Program) => {
     setSelectedProgram(program)
@@ -40,7 +42,7 @@ export default function ProgramsPage() {
   const loadPrograms = async () => {
     setIsLoading(true)
       try {
-        const data = await fetchPrograms(page)
+        const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder)
         setPrograms(data.programs)
         setTotalPages(data.pages)
         setTotalPrograms(data.total)
@@ -56,9 +58,17 @@ export default function ProgramsPage() {
   }, [page])
 
   useEffect(() => {
+    loadPrograms()
+  }, [search, searchBy])
+  
+  useEffect(() => {
+    loadPrograms()
+  }, [sortBy, sortOrder])
+
+  useEffect(() => {
       const loadColleges = async () => {
         try {
-          const data = await fetchColleges(page) 
+          const data = await fetchColleges() 
           setTotalColleges(data.total)
         } catch (error) {
           console.error("Failed to load colleges:", error)
@@ -125,60 +135,37 @@ export default function ProgramsPage() {
           {isLoading ? (
             <div className="text-center py-6 text-muted-foreground">Loading programs...</div>
           ) : programs.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">Loading programs...</div>
+            <div className="text-center py-6 text-muted-foreground">No data.</div>
           ) : (
-            (() => {
-              const filteredData = programs.filter((program) => {
-                if (searchBy === "all") {
-                  return Object.values(program)
-                    .join(" ")
-                    .toLowerCase()
-                    .includes(search.toLowerCase())
-                }
+          <div className="transition-opacity duration-300 opacity-100">
+            <DataTable 
+              columns={ProgramColumns(openEditDialog, setProgramToDelete, sortBy, sortOrder, setSortBy, setSortOrder)} 
+              data={programs}
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
+            />
 
-                const keyMap = {
-                  programCode: "programCode",
-                  programName: "programName",
-                  collegeCode: "collegeCode",
-                }
+            {selectedProgram && (
+              <EditProgramDialog
+                program={selectedProgram ?? { programCode: "", programName: "", collegeCode: "" }}
+                onProgramUpdated={() => {
+                  loadPrograms()
+                  setSelectedProgram(null)
+                }}
+              />
+            )}
 
-                const key = keyMap[searchBy]
-                const value = program[key as keyof Program]
-                return value?.toString().toLowerCase().includes(search.toLowerCase())
-              })
-
-              return (
-                <div className="transition-opacity duration-300 opacity-100">
-                  <DataTable 
-                    columns={ProgramColumns(openEditDialog, setProgramToDelete)} 
-                    data={filteredData}
-                    page={page}
-                    totalPages={totalPages}
-                    setPage={setPage}
-                  />
-  
-                  {selectedProgram && (
-                    <EditProgramDialog
-                      program={selectedProgram ?? { programCode: "", programName: "", collegeCode: "" }}
-                      onProgramUpdated={() => {
-                        loadPrograms()
-                        setSelectedProgram(null)
-                      }}
-                    />
-                  )}
-
-                  {programToDelete && (
-                    <DeleteProgramDialog
-                      program={programToDelete}
-                      onProgramDeleted={() => {
-                        loadPrograms()
-                        setProgramToDelete(null)
-                      }}
-                    />
-                  )}
-                </div>
-              )
-            })()
+            {programToDelete && (
+              <DeleteProgramDialog
+                program={programToDelete}
+                onProgramDeleted={() => {
+                  loadPrograms()
+                  setProgramToDelete(null)
+                }}
+              />
+            )}
+          </div>
           )}
       </div>
     </div>

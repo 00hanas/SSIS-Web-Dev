@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.models.college import College
 from app.extensions import db
 from app.forms.college_form import CollegeForm
+from sqlalchemy import cast
 
 college_bp = Blueprint("college_bp", __name__, url_prefix="/api/colleges")
 
@@ -79,17 +80,17 @@ def list_colleges():
     query = College.query
 
     search = request.args.get('search', '').lower()
-    search_by = request.args.get('searchBy', 'all')
+    searchBy = request.args.get('searchBy', 'all')
     if search:
-        if search_by == 'collegeCode':
-            query = query.filter(College.collegeCode.ilike(f'%{search}%'))
-        elif search_by == 'collegeName':
-            query = query.filter(College.collegeName.ilike(f'%{search}%'))
-        else:
+        if searchBy == 'collegeCode':
+            query = query.filter(cast(College.collegeCode, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'collegeName':
+            query = query.filter(cast(College.collegeName, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'all':
             query = query.filter(
                 db.or_(
-                    College.collegeCode.ilike(f'%{search}%'),
-                    College.collegeName.ilike(f'%{search}%')
+                    cast(College.collegeCode, db.String).ilike(f'%{search}%'),
+                    cast(College.collegeName, db.String).ilike(f'%{search}%')
                 )
             )
 
@@ -100,7 +101,7 @@ def list_colleges():
         query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
     page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 20))
+    per_page = int(request.args.get('per_page', 15))
     colleges = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({

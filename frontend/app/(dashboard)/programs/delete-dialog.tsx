@@ -1,6 +1,6 @@
 "use client"
 
-import { Program } from "@/app/table/programs-columns"
+import { Program } from "@/app/table/program-columns"
 import { EntityConfirmationDialog } from "@/components/entity-confirmation-dialog"
 import { Button } from "@/components/ui/button"
 import {

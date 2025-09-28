@@ -68,7 +68,7 @@ export default function CollegesPage() {
   useEffect(() => {
     const loadPrograms = async () => {
       try {
-        const data = await fetchPrograms(page) 
+        const data = await fetchPrograms() 
         setTotalPrograms(data.total)
       } catch (error) {
         console.error("Failed to load programs:", error)
@@ -123,8 +123,8 @@ export default function CollegesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Search by</SelectItem>
-              <SelectItem value="ccode">College Code</SelectItem>
-              <SelectItem value="name">College Name</SelectItem>
+              <SelectItem value="collegeCode">College Code</SelectItem>
+              <SelectItem value="collegeName">College Name</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -134,7 +134,7 @@ export default function CollegesPage() {
         {isLoading ? (
           <div className="text-center py-6 text-muted-foreground">Loading colleges...</div>
         ) : colleges.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">Loading colleges...</div>
+          <div className="text-center py-6 text-muted-foreground">No data.</div>
         ) : (
           <div className="transition-opacity duration-300 opacity-100">
             <DataTable 

@@ -22,15 +22,27 @@ export type Program = {
 
 export const ProgramColumns = (
   setEditDialog: (program: Program) => void,
-  setDeleteDialog: (program: Program) => void
+  setDeleteDialog: (program: Program) => void,
+  sortBy: "programCode" | "programName" | "collegeCode",
+  sortOrder: "asc" | "desc",
+  setSortBy: (key: "programCode" | "programName" | "collegeCode") => void,
+  setSortOrder: (order: "asc" | "desc") => void
 ): ColumnDef<Program>[] => [
     {
         accessorKey: "programCode",
-        header: ({ column }) => {
+        size: 150,
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "programCode") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("programCode")
+              setSortOrder("asc")
+            }
+          }}
         >
           Program Code
           <SortIcon className="ml-2 h-4 w-4" />
@@ -40,11 +52,19 @@ export const ProgramColumns = (
     },
     {
         accessorKey: "programName",
-        header: ({ column }) => {
+        size: 500,
+        header: () => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            if (sortBy === "programName") {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            } else {
+              setSortBy("programName")
+              setSortOrder("asc")
+            }
+          }}
         >
           Program Name
           <SortIcon className="ml-2 h-4 w-4" />
@@ -54,11 +74,18 @@ export const ProgramColumns = (
     },
    {
       accessorKey: "collegeCode",
-      header: ({ column }) => {
+      header: () => {
         return (
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => {
+              if (sortBy === "collegeCode") {
+                setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+              } else {
+                setSortBy("collegeCode")
+                setSortOrder("asc")
+              }
+            }}
           >
             College Code
             <SortIcon className="ml-2 h-4 w-4" />
@@ -74,10 +101,12 @@ export const ProgramColumns = (
     },
     {
     id: "actions",
+    size: 100,
     cell: ({ row }) => {
       const program = row.original
  
       return (
+        <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-5 w-8 p-0">
@@ -106,6 +135,7 @@ export const ProgramColumns = (
             </Button>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       )
     },
   },

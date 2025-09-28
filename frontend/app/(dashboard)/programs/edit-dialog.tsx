@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { fetchCollegesForDropdown } from "@/lib/college-api"
 import { College } from "../../table/college-columns"
-import { Program } from "@/app/table/programs-columns"
+import { Program } from "@/app/table/program-columns"
 import { fetchProgram, updateProgram } from "@/lib/program-api"
 import { EntityConfirmationDialog } from "@/components/entity-confirmation-dialog"
 

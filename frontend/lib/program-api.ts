@@ -1,15 +1,28 @@
-import { Program } from "@/app/table/programs-columns"
+import { Program } from "@/app/table/program-columns"
 
 export const fetchPrograms = async (
   page: number = 1,
-  perPage: number = 10,
+  perPage: number = 15,
+  search: string = "",
+  searchBy: "all" | "programCode" | "programName" | "collegeCode" = "all",
+  sortBy: "programCode" | "programName" | "collegeCode" = "programCode",
+  order: "asc" | "desc" = "asc"
 ): Promise<{ 
   programs: Program[]
   total: number
   pages: number
   current_page: number 
 }> => {
-  const res = await fetch(`http://127.0.0.1:5000/api/programs?page=${page}&per_page=${perPage}`, {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString(),
+    search,
+    searchBy,
+    sort_by: sortBy,
+    order
+  })
+
+  const res = await fetch(`http://127.0.0.1:5000/api/programs?${params.toString()}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     mode: 'cors'

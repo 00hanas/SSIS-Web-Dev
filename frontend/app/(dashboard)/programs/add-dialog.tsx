@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { fetchCollegesForDropdown } from "@/lib/college-api"
 import { College } from "../../table/college-columns"
 import { EntityConfirmationDialog } from "@/components/entity-confirmation-dialog"
-import { Program } from "@/app/table/programs-columns"
+import { Program } from "@/app/table/program-columns"
 import { createProgram } from "@/lib/program-api"
 
 type AddProgramDialogProps = {

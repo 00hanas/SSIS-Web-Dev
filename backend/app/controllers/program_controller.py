@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.models.program import Program
 from app.extensions import db
 from app.forms.program_form import ProgramForm
+from sqlalchemy import cast
 
 program_bp = Blueprint("program_bp", __name__, url_prefix="/api/programs")
 
@@ -68,22 +69,37 @@ def delete_program(programCode):
     db.session.commit()
     return jsonify({'message': f'Program {programCode} deleted and students updated'})
 
+#page display with search and sort
 @program_bp.route('', methods=['GET'])
 def list_programs():
     query = Program.query
 
-    search = request.args.get('search')
+    search = request.args.get('search', '').lower()
+    searchBy = request.args.get('searchBy', 'all')
     if search:
-        query = query.filter(Program.programName.ilike(f'%{search}%'))
-
-    sort_by = request.args.get('sort_by', 'programName')
+        if searchBy == 'programCode':
+            query = query.filter(cast(Program.programCode, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'programName':
+            query = query.filter(cast(Program.programName, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'collegeCode':
+            query = query.filter(cast(Program.collegeCode, db.String).ilike(f'%{search}%'))
+        elif searchBy == 'all':
+            query = query.filter(
+                db.or_(
+                    cast(Program.programCode, db.String).ilike(f'%{search}%'),
+                    cast(Program.programName, db.String).ilike(f'%{search}%'),
+                    cast(Program.collegeCode, db.String).ilike(f'%{search}%')
+                )
+            )
+    
+    sort_by = request.args.get('sort_by', 'programCode')
     order = request.args.get('order', 'asc')
     if hasattr(Program, sort_by):
         sort_column = getattr(Program, sort_by)
         query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
     page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
+    per_page = int(request.args.get('per_page', 15))
     programs = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({

@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Program } from "../../table/programs-columns"
+import { Program } from "../../table/program-columns"
 import { fetchProgramsForDropdown } from "@/lib/program-api"
 import { Student } from "@/app/table/student-columns"
 import { createStudent } from "@/lib/student-api"
