@@ -1,4 +1,5 @@
 # 📘 Student Information System (SSIS)
+This is a full-stack web application for managing students, programs, and colleges.
 
 ## 🧱 Tech Stack
 
