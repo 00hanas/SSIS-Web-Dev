@@ -1,12 +1,15 @@
 import { College } from "@/app/table/college-columns"
 
+const BASE_URL = "http://127.0.0.1:5000/api/colleges"
+
 export const fetchColleges = async (
   page: number = 1,
   perPage: number = 15,
   search: string = "",
   searchBy: "all" | "collegeCode" | "collegeName" = "all",
   sortBy: "collegeCode" | "collegeName" = "collegeCode",
-  order: "asc" | "desc" = "asc"
+  order: "asc" | "desc" = "asc",
+  token?: string
 ): Promise<{
   colleges: College[]
   total: number
@@ -18,40 +21,54 @@ export const fetchColleges = async (
     per_page: perPage.toString(),
     search,
     searchBy,
-    sortBy: sortBy,
+    sortBy,
     order
   })
 
-  const res = await fetch(`http://127.0.0.1:5000/api/colleges?${params.toString()}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    mode: 'cors'
+  const res = await fetch(`${BASE_URL}?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    mode: "cors"
   })
 
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
-
-  const data = await res.json()
-  console.log("Total colleges:", data.total)
-  return data
+  return await res.json()
 }
 
 export const fetchCollegesForDropdown = async (): Promise<College[]> => {
-  const res = await fetch("http://127.0.0.1:5000/api/colleges/dropdown")
+  const res = await fetch(`${BASE_URL}/dropdown`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    mode: "cors"
+  })
+
   if (!res.ok) {
     const text = await res.text()
     console.error("Server returned:", text)
     throw new Error("Failed to fetch colleges")
   }
-  const data = await res.json()
 
+  const data = await res.json()
   return data.colleges
 }
 
-export const createCollege = async (collegeCode: string, collegeName: string) => {
-  const res = await fetch("http://127.0.0.1:5000/api/colleges/create", {
+export const createCollege = async (
+  collegeCode: string,
+  collegeName: string,
+  token?: string
+) => {
+  const res = await fetch(`${BASE_URL}/create`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ collegeCode, collegeName }),
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ collegeCode, collegeName })
   })
 
   if (!res.ok) {
@@ -62,35 +79,58 @@ export const createCollege = async (collegeCode: string, collegeName: string) =>
   return await res.json()
 }
 
-export async function fetchCollege(collegeCode: string): Promise<College> {
-  const response = await fetch(`http://127.0.0.1:5000/api/colleges/${collegeCode}`)
-  if (!response.ok) {
-    console.error("Fetch failed with status:", response.status)
+export const fetchCollege = async (
+  collegeCode: string,
+  token?: string
+): Promise<College> => {
+  const res = await fetch(`${BASE_URL}/${collegeCode}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    mode: "cors"
+  })
+
+  if (!res.ok) {
+    console.error("Fetch failed with status:", res.status)
     throw new Error("Failed to fetch college")
   }
-  const data = await response.json()
-  console.log("Fetched college:", data)
-  return data
+
+  return await res.json()
 }
 
-export async function updateCollege(originalCode: string, collegeCode: string, collegeName: string): Promise<College> {
-  const response = await fetch(`http://127.0.0.1:5000/api/colleges/${originalCode}`, {
+export const updateCollege = async (
+  originalCode: string,
+  collegeCode: string,
+  collegeName: string,
+  token?: string
+): Promise<College> => {
+  const res = await fetch(`${BASE_URL}/${originalCode}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ collegeCode, collegeName }),
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ collegeCode, collegeName })
   })
-  const data = await response.json()
 
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to update college")
-  }
-  
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || "Failed to update college")
   return data.college
 }
 
-export async function deleteCollege(collegeCode: string) {
-  const res = await fetch(`http://127.0.0.1:5000/api/colleges/${collegeCode}`, {
-    method: "DELETE"
+export const deleteCollege = async (
+  collegeCode: string,
+  token?: string
+) => {
+  const res = await fetch(`${BASE_URL}/${collegeCode}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    mode: "cors"
   })
 
   const contentType = res.headers.get("content-type")
@@ -105,4 +145,3 @@ export async function deleteCollege(collegeCode: string) {
 
   return await res.json()
 }
-

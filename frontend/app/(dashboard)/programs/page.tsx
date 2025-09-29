@@ -19,8 +19,10 @@ import { fetchPrograms } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
 import { EditProgramDialog } from "./edit-dialog"
 import { DeleteProgramDialog } from "./delete-dialog"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function ProgramsPage() {
+  const { token, loading } = useAuth()
   const [programs, setPrograms] = useState<Program[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -42,7 +44,7 @@ export default function ProgramsPage() {
   const loadPrograms = async () => {
     setIsLoading(true)
       try {
-        const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder)
+        const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder, token ?? undefined)
         setPrograms(data.programs)
         setTotalPages(data.pages)
         setTotalPrograms(data.total)
@@ -54,16 +56,11 @@ export default function ProgramsPage() {
     }
   
   useEffect(() => {
-    loadPrograms()
-  }, [page])
-
-  useEffect(() => {
-    loadPrograms()
-  }, [search, searchBy])
-  
-  useEffect(() => {
-    loadPrograms()
-  }, [sortBy, sortOrder])
+    const timeout = setTimeout(() => {
+      loadPrograms()
+    }, 300)
+    return () => clearTimeout(timeout)
+  }, [search, searchBy, page, sortBy, sortOrder])
 
   useEffect(() => {
       const loadColleges = async () => {
@@ -88,6 +85,11 @@ export default function ProgramsPage() {
       }
       loadStudents()
     }, [])
+
+    if (loading) return <div>Loading...</div>
+    if (!token && !loading) {
+      return <div className="text-center py-6 text-muted-foreground">Redirecting to login...</div>
+    }
 
   return (
     <div className="container mx-auto py-1">

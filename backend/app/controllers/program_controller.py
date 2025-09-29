@@ -3,12 +3,15 @@ from app.models.program import Program
 from app.extensions import db
 from app.forms.program_form import ProgramForm
 from sqlalchemy import cast
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 program_bp = Blueprint("program_bp", __name__, url_prefix="/api/programs")
 
 #add
 @program_bp.route('/create', methods=['POST'])
+@jwt_required()
 def create_program():
+    current_user_id = get_jwt_identity()
     form = ProgramForm(request.get_json())
     if not form.is_valid():
         return jsonify({"error": form.errors[0]}), 400
@@ -23,17 +26,23 @@ def create_program():
     db.session.add(program)
     db.session.commit()
 
+    print(f"[CREATE] User {current_user_id} created program {form.programCode}")
     return jsonify({'message': 'Program created', 'program': program.serialize()}), 201
 
 #edit (for pre-filled data)
 @program_bp.route('/<programCode>', methods=['GET'])
+@jwt_required()
 def get_program(programCode):
+    current_user_id = get_jwt_identity()
     program = Program.query.get_or_404(programCode)
+    print(f"[READ] User {current_user_id} accessed program {programCode}")
     return jsonify(program.serialize())
 
 #update
 @program_bp.route('/<programCode>', methods=['PUT'])
+@jwt_required()
 def update_program(programCode):
+    current_user_id = get_jwt_identity()
     program = Program.query.get_or_404(programCode)
     data = request.get_json()
     form = ProgramForm(data)
@@ -54,12 +63,15 @@ def update_program(programCode):
     program.collegeCode = form.collegeCode
     db.session.commit()
 
+    print(f"[UPDATE] User {current_user_id} updated program {programCode}")
     return jsonify({'message': 'Program updated', 'program': program.serialize()})
 
 #delete
 from app.models.student import Student
 @program_bp.route('/<programCode>', methods=['DELETE'])
+@jwt_required()
 def delete_program(programCode):
+    current_user_id = get_jwt_identity()
     program = Program.query.get_or_404(programCode)
     students = Student.query.filter_by(programCode=programCode).all()
     for student in students:
@@ -67,11 +79,15 @@ def delete_program(programCode):
 
     db.session.delete(program)
     db.session.commit()
+
+    print(f"[DELETE] User {current_user_id} deleted program {programCode}")
     return jsonify({'message': f'Program {programCode} deleted and students updated'})
 
 #page display with search and sort
 @program_bp.route('', methods=['GET'])
+@jwt_required()
 def list_programs():
+    current_user_id = get_jwt_identity()
     query = Program.query
 
     search = request.args.get('search', '').lower()
@@ -102,6 +118,7 @@ def list_programs():
     per_page = int(request.args.get('per_page', 15))
     programs = query.paginate(page=page, per_page=per_page, error_out=False)
 
+    print(f"[LIST] User {current_user_id} viewed program list with search='{search}' and sort='{sortBy}:{order}'")
     return jsonify({
         'programs': [p.serialize() for p in programs.items],
         'total': programs.total,
