@@ -68,15 +68,24 @@ def signup():
     return jsonify({"message": "User registered successfully."}), 201
 
 @auth_bp.route('/ping', methods=['GET'])
-@jwt_required(verify_type=False)
+@jwt_required()
 def ping():
     try:
         user_id = get_jwt_identity()
         print("Ping user_id:", user_id)
-        return jsonify({"user_id": user_id}), 200
+
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "user_id": user_id,
+            "user": {
+                "name": user.username,
+                "email": user.email
+            }
+        }), 200
     except Exception as e:
-        import traceback
-        traceback.print_exc()  # ✅ full stack trace
         print("Ping error:", repr(e))
         return jsonify({"error": "Invalid token"}), 422
 
