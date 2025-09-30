@@ -31,7 +31,6 @@ def login():
             return jsonify({"error": form.errors[0]}), 400
 
         user = User.query.filter_by(email=form.email).first()
-        print("Queried user:", user)
 
         if user is None:
             return jsonify({"error": "Email is not registered."}), 404

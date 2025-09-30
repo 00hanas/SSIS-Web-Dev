@@ -9,7 +9,6 @@ import {
   MoreVertSharp as DotsIcon,
   Logout as IconLogout,
 } from "@mui/icons-material"
-
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useAuth } from "@/hooks/useAuth"
+
 
 const items = [
   { title: "Colleges", href: "/colleges", icon: CollegeIcon },
@@ -41,6 +42,7 @@ export function AppSidebar() {
   const { open, isMobile } = useSidebar()
   const pathname = usePathname()
   const user = useCurrentUser()
+  const { logout } = useAuth()
 
   return (
     <Sidebar collapsible="icon" className="data-[collapsible=icon]:w-20">
@@ -136,7 +138,7 @@ export function AppSidebar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>
               <IconLogout className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>

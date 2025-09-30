@@ -20,7 +20,7 @@ export const fetchColleges = async (
   current_page: number
 }> => {
 
-  const safeSearchBy = searchBy === "all" ? "collegeName" : searchBy
+  const safeSearchBy = searchBy === "all" ? "all" : searchBy
   const params = new URLSearchParams({
     page: page.toString(),
     per_page: perPage.toString(),

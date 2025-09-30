@@ -12,4 +12,6 @@ class SignUpForm:
             self.errors.append("Email is required.")
         if not self.password:
             self.errors.append("Password is required.")
+        elif len(self.password) < 6:
+            self.errors.append("Password must be at least 6 characters.")
         return not self.errors

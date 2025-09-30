@@ -26,9 +26,26 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
   const [username, setUsername] = useState("")
   const [error, setError] = useState("")
 
+  const resetForm = () => {
+    setEmail("")
+    setPassword("")
+    setUsername("")
+    setError("")
+  }
+
+  const handleDialogClose = () => {
+    resetForm()
+    onClose()
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.")
+      return
+    }
     try {
       await signupUser(email, password, username)
       onSignedUp?.()
@@ -43,7 +60,7 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleDialogClose()}>
       <DialogContent className="mx-auto w-100">
         <DialogHeader>
           <DialogTitle>Create an Account</DialogTitle>
