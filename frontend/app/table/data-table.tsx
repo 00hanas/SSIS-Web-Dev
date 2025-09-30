@@ -52,7 +52,9 @@ export function DataTable<TData, TValue>({
     <div>
     <div className="overflow-hidden rounded-md border">
       <Table className="table-fixed w-full">
-        <TableHeader className="bg-gradient-to-b from-gray-100 to-transparent dark:from-neutral-800 dark:to-neutral-950 transition-transform transform">
+        <TableHeader
+          className="bg-gradient-to-b from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] transition-transform transform"
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -99,7 +101,7 @@ export function DataTable<TData, TValue>({
           Page {page} of {totalPages}
         </span>
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
           onClick={() => setPage(page - 1)}
           disabled={page <= 1}
@@ -107,7 +109,7 @@ export function DataTable<TData, TValue>({
           Previous
         </Button>
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
           onClick={() => setPage(page + 1)}
           disabled={page >= totalPages}

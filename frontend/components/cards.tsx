@@ -27,8 +27,7 @@ export function CardDemographic({ colleges, programs, students }: CardDemographi
         <Link key={item.title} href={item.href}>
           <Card
             className={`
-              bg-gradient-to-b from-gray-100 to-transparent dark:from-neutral-800 dark:to-neutral-950
-              transition-transform transform hover:scale-105 hover:shadow-lg
+              bg-gradient-to-b from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] transition-transform hover:scale-105 hover:shadow-lg
               cursor-pointer rounded-2xl h-40
             `}
           >
