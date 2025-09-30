@@ -101,7 +101,7 @@ export function AppSidebar() {
               >
                 <div className="w-10 h-10 flex-shrink-0">
                   <img
-                    src="/2by2.png"
+                    src="/icon.jpg"
                     alt="Profile"
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -133,7 +133,7 @@ export function AppSidebar() {
                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <div className="w-10 h-10 flex-shrink-0">
                   <img
-                    src="/2by2.png"
+                    src="/icon.jpg"
                     alt="Profile"
                     className="w-10 h-10 rounded-full object-cover"
                   />
