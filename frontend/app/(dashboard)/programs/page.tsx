@@ -22,7 +22,7 @@ import { DeleteProgramDialog } from "./delete-dialog"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function ProgramsPage() {
-  const { token, loading } = useAuth()
+  const { authenticated, loading } = useAuth()
   const [programs, setPrograms] = useState<Program[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -44,7 +44,7 @@ export default function ProgramsPage() {
   const loadPrograms = async () => {
     setIsLoading(true)
       try {
-        const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder, token ?? undefined)
+        const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder)
         setPrograms(data.programs)
         setTotalPages(data.pages)
         setTotalPrograms(data.total)
@@ -65,7 +65,7 @@ export default function ProgramsPage() {
   useEffect(() => {
       const loadColleges = async () => {
         try {
-          const data = await fetchColleges() 
+          const data = await fetchColleges(page, 15, "", "all", "collegeCode", "asc") 
           setTotalColleges(data.total)
         } catch (error) {
           console.error("Failed to load colleges:", error)
@@ -77,7 +77,7 @@ export default function ProgramsPage() {
     useEffect(() => {
       const loadStudents = async () => {
         try {
-          const data = await fetchStudents(page) 
+          const data = await fetchStudents(page, 15, "", "all", "lastName", "asc") 
           setTotalStudents(data.total)
         } catch (error) {
           console.error("Failed to load students:", error)
@@ -87,7 +87,7 @@ export default function ProgramsPage() {
     }, [])
 
     if (loading) return <div>Loading...</div>
-    if (!token && !loading) {
+    if (!authenticated && !loading) {
       return <div className="text-center py-6 text-muted-foreground">Redirecting to login...</div>
     }
 

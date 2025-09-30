@@ -85,51 +85,58 @@ def delete_student(studentID):
 @student_bp.route('', methods=['GET'])
 @jwt_required()
 def list_students():
+    print("Query string:", request.query_string.decode())
     current_user_id = get_jwt_identity()
     query = Student.query
 
+    allowed_search_fields = {"all", "studentID", "firstName", "lastName", "programCode", "yearLevel", "gender"}
+    allowed_sort_fields = {"studentID", "firstName", "lastName", "programCode", "yearLevel", "gender"}
+
     search = request.args.get('search', '').lower()
     searchBy = request.args.get('searchBy', 'all')
-    if search:
-        if searchBy == 'studentID':
-            query = query.filter(cast(Student.studentID, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'firstName':
-            query = query.filter(cast(Student.firstName, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'lastName':
-            query = query.filter(cast(Student.lastName, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'programCode':
-            query = query.filter(cast(Student.programCode, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'yearLevel':
-            query = query.filter(cast(Student.yearLevel, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'gender':
-            query = query.filter(cast(Student.gender, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'all':
-            query = query.filter(
-                or_(
-                    cast(Student.studentID, db.String).ilike(f'%{search}%'),
-                    cast(Student.firstName, db.String).ilike(f'%{search}%'),
-                    cast(Student.lastName, db.String).ilike(f'%{search}%'),
-                    cast(Student.programCode, db.String).ilike(f'%{search}%'),
-                    cast(Student.yearLevel, db.String).ilike(f'%{search}%'),
-                    cast(Student.gender, db.String).ilike(f'%{search}%')
-                )
-            )
-
     sortBy = request.args.get('sortBy', 'lastName')
     order = request.args.get('order', 'asc')
-    if hasattr(Student, sortBy):
-        sort_column = getattr(Student, sortBy)
-        query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 15))
+    if searchBy not in allowed_search_fields:
+        return jsonify({"error": f"Invalid searchBy: {searchBy}"}), 422
+    if sortBy not in allowed_sort_fields:
+        return jsonify({"error": f"Invalid sortBy: {sortBy}"}), 422
+    if order not in {"asc", "desc"}:
+        return jsonify({"error": f"Invalid order: {order}"}), 422
+
+    if search:
+        filters = {
+            "studentID": Student.studentID,
+            "firstName": Student.firstName,
+            "lastName": Student.lastName,
+            "programCode": Student.programCode,
+            "yearLevel": Student.yearLevel,
+            "gender": Student.gender
+        }
+        if searchBy == "all":
+            query = query.filter(
+                db.or_(*[cast(col, db.String).ilike(f"%{search}%") for col in filters.values()])
+            )
+        else:
+            query = query.filter(cast(filters[searchBy], db.String).ilike(f"%{search}%"))
+
+    sort_column = getattr(Student, sortBy)
+    query = query.order_by(db.desc(sort_column) if order == "desc" else sort_column)
+
+    try:
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 15))
+    except ValueError:
+        return jsonify({"error": "Invalid pagination parameters"}), 422
+
     students = query.paginate(page=page, per_page=per_page, error_out=False)
 
     print(f"[LIST] User {current_user_id} viewed student list with search='{search}' and sort='{sortBy}:{order}'")
     return jsonify({
-        'students': [s.serialize() for s in students.items],
-        'total': students.total,
-        'pages': students.pages,
-        'current_page': students.page
+        "students": [s.serialize() for s in students.items],
+        "total": students.total,
+        "pages": students.pages,
+        "current_page": students.page
     })
+
 

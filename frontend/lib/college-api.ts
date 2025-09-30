@@ -2,49 +2,54 @@ import { College } from "@/app/table/college-columns"
 
 const BASE_URL = "http://127.0.0.1:5000/api/colleges"
 
+function sanitizeQuery(value: string | undefined): string {
+  return value?.trim() === "search" ? "" : value?.trim() || ""
+}
+
 export const fetchColleges = async (
   page: number = 1,
   perPage: number = 15,
   search: string = "",
   searchBy: "all" | "collegeCode" | "collegeName" = "all",
   sortBy: "collegeCode" | "collegeName" = "collegeCode",
-  order: "asc" | "desc" = "asc",
-  token?: string
+  order: "asc" | "desc" = "asc"
 ): Promise<{
   colleges: College[]
   total: number
   pages: number
   current_page: number
 }> => {
+
+  const safeSearchBy = searchBy === "all" ? "collegeName" : searchBy
   const params = new URLSearchParams({
     page: page.toString(),
     per_page: perPage.toString(),
-    search,
-    searchBy,
+    search: sanitizeQuery(search),
+    searchBy: safeSearchBy,
     sortBy,
     order
   })
 
   const res = await fetch(`${BASE_URL}?${params.toString()}`, {
     method: "GET",
+    credentials: "include",
     headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    },
-    mode: "cors"
+      "Content-Type": "application/json"
+    }
   })
 
-  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
-  return await res.json()
+  const data = await res.json()
+  console.log("Total colleges:", data.total)
+  return data
 }
 
 export const fetchCollegesForDropdown = async (): Promise<College[]> => {
   const res = await fetch(`${BASE_URL}/dropdown`, {
     method: "GET",
+    credentials: "include", 
     headers: {
       "Content-Type": "application/json"
-    },
-    mode: "cors"
+    }
   })
 
   if (!res.ok) {
@@ -59,14 +64,13 @@ export const fetchCollegesForDropdown = async (): Promise<College[]> => {
 
 export const createCollege = async (
   collegeCode: string,
-  collegeName: string,
-  token?: string
+  collegeName: string
 ) => {
   const res = await fetch(`${BASE_URL}/create`, {
     method: "POST",
+    credentials: "include",
     headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({ collegeCode, collegeName })
   })
@@ -80,16 +84,14 @@ export const createCollege = async (
 }
 
 export const fetchCollege = async (
-  collegeCode: string,
-  token?: string
+  collegeCode: string
 ): Promise<College> => {
   const res = await fetch(`${BASE_URL}/${collegeCode}`, {
     method: "GET",
+    credentials: "include",
     headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    },
-    mode: "cors"
+      "Content-Type": "application/json"
+    }
   })
 
   if (!res.ok) {
@@ -103,14 +105,13 @@ export const fetchCollege = async (
 export const updateCollege = async (
   originalCode: string,
   collegeCode: string,
-  collegeName: string,
-  token?: string
+  collegeName: string
 ): Promise<College> => {
   const res = await fetch(`${BASE_URL}/${originalCode}`, {
     method: "PUT",
+    credentials: "include", 
     headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({ collegeCode, collegeName })
   })
@@ -121,16 +122,14 @@ export const updateCollege = async (
 }
 
 export const deleteCollege = async (
-  collegeCode: string,
-  token?: string
+  collegeCode: string
 ) => {
   const res = await fetch(`${BASE_URL}/${collegeCode}`, {
     method: "DELETE",
+    credentials: "include", 
     headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    },
-    mode: "cors"
+      "Content-Type": "application/json"
+    }
   })
 
   const contentType = res.headers.get("content-type")

@@ -87,46 +87,61 @@ def delete_program(programCode):
 @program_bp.route('', methods=['GET'])
 @jwt_required()
 def list_programs():
+    print("Query string:", request.query_string.decode())
     current_user_id = get_jwt_identity()
     query = Program.query
 
+    allowed_search_fields = {"all", "programCode", "programName", "collegeCode"}
+    allowed_sort_fields = {"programCode", "programName", "collegeCode"}
+
     search = request.args.get('search', '').lower()
     searchBy = request.args.get('searchBy', 'all')
-    if search:
-        if searchBy == 'programCode':
-            query = query.filter(cast(Program.programCode, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'programName':
-            query = query.filter(cast(Program.programName, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'collegeCode':
-            query = query.filter(cast(Program.collegeCode, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'all':
-            query = query.filter(
-                db.or_(
-                    cast(Program.programCode, db.String).ilike(f'%{search}%'),
-                    cast(Program.programName, db.String).ilike(f'%{search}%'),
-                    cast(Program.collegeCode, db.String).ilike(f'%{search}%')
-                )
-            )
-    
     sortBy = request.args.get('sortBy', 'programCode')
     order = request.args.get('order', 'asc')
-    if hasattr(Program, sortBy):
-        sort_column = getattr(Program, sortBy)
-        query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
 
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 15))
+
+    if searchBy not in allowed_search_fields:
+        return jsonify({"error": f"Invalid searchBy: {searchBy}"}), 422
+    if sortBy not in allowed_sort_fields:
+        return jsonify({"error": f"Invalid sortBy: {sortBy}"}), 422
+    if order not in {"asc", "desc"}:
+        return jsonify({"error": f"Invalid order: {order}"}), 422
+
+    if search:
+        filters = {
+            "programCode": Program.programCode,
+            "programName": Program.programName,
+            "collegeCode": Program.collegeCode
+        }
+        if searchBy == "all":
+            query = query.filter(
+                db.or_(*[cast(col, db.String).ilike(f"%{search}%") for col in filters.values()])
+            )
+        else:
+            query = query.filter(cast(filters[searchBy], db.String).ilike(f"%{search}%"))
+
+    sort_column = getattr(Program, sortBy)
+    query = query.order_by(db.desc(sort_column) if order == "desc" else sort_column)
+
+    try:
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 15))
+    except ValueError:
+        return jsonify({"error": "Invalid pagination parameters"}), 422
+
     programs = query.paginate(page=page, per_page=per_page, error_out=False)
 
     print(f"[LIST] User {current_user_id} viewed program list with search='{search}' and sort='{sortBy}:{order}'")
     return jsonify({
-        'programs': [p.serialize() for p in programs.items],
-        'total': programs.total,
-        'pages': programs.pages,
-        'current_page': programs.page
+        "programs": [p.serialize() for p in programs.items],
+        "total": programs.total,
+        "pages": programs.pages,
+        "current_page": programs.page
     })
 
+
 @program_bp.route('/dropdown', methods=['GET'])
+@jwt_required()
 def list_program_for_dropdown():
     programs = Program.query.order_by(Program.programName).all()
     return jsonify({

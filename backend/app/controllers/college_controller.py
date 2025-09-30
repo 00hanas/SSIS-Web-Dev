@@ -92,6 +92,7 @@ def delete_college(collegeCode):
 @jwt_required()
 def list_colleges():
     current_user_id = get_jwt_identity()
+    print("Authenticated user:", current_user_id)
     query = College.query
 
     search = request.args.get('search', '').lower()
@@ -128,6 +129,7 @@ def list_colleges():
     })
 
 @college_bp.route('/dropdown', methods=['GET'])
+@jwt_required()
 def list_colleges_for_dropdown():
     colleges = College.query.order_by(College.collegeName).all()
     return jsonify({
