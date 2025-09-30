@@ -28,6 +28,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -43,6 +51,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const user = useCurrentUser()
   const { logout } = useAuth()
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false)
 
   return (
     <Sidebar collapsible="icon" className="data-[collapsible=icon]:w-20">
@@ -138,7 +147,7 @@ export function AppSidebar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)}>
               <IconLogout className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>
@@ -146,6 +155,30 @@ export function AppSidebar() {
         </DropdownMenu>
       </SidebarFooter>
     )}
+    <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Confirm Logout</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Are you sure you want to log out?
+        </p>
+        <DialogFooter className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setShowLogoutConfirm(false)
+              logout()
+            }}
+          >
+            Log out
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </Sidebar>
   )
 }

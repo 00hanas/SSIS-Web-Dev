@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signupUser } from "@/lib/login-api"
+import { SignUpSuccessDialog } from "@/components/signup-confirmation-dialog"
 
 interface SignUpDialogProps {
   open: boolean
@@ -25,6 +26,7 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
   const [password, setPassword] = useState("")
   const [username, setUsername] = useState("")
   const [error, setError] = useState("")
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const resetForm = () => {
     setEmail("")
@@ -48,6 +50,8 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
     }
     try {
       await signupUser(email, password, username)
+      resetForm()
+      setShowSuccess(true)
       onSignedUp?.()
       onClose()
     } catch (err: any) {
@@ -60,6 +64,7 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(open) => !open && handleDialogClose()}>
       <DialogContent className="mx-auto w-100">
         <DialogHeader>
@@ -110,5 +115,7 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
         </form>
       </DialogContent>
     </Dialog>
+    <SignUpSuccessDialog open={showSuccess} onClose={() => setShowSuccess(false)} />
+  </>
   )
 }
