@@ -43,17 +43,18 @@ export default function ProgramsPage() {
 
   const loadPrograms = async () => {
     setIsLoading(true)
-      try {
-        const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder)
-        setPrograms(data.programs)
-        setTotalPages(data.pages)
-        setTotalPrograms(data.total)
-      } catch (error) {
-        console.error("Failed to load programs:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    try {
+      const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder)
+      setPrograms(data.programs)
+      setTotalPages(data.pages)
+      setTotalPrograms(data.total)
+    } catch (error) {
+      console.error("Failed to load programs:", error)
+      setPrograms([])
+    } finally {
+      setIsLoading(false)
     }
+  }
   
   useEffect(() => {
     const timeout = setTimeout(() => {

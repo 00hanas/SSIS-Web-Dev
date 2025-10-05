@@ -1,15 +1,14 @@
-from app import db
+from app.database import get_db
 
-class Student(db.Model):
-    __tablename__ = 'student'
+class Student():
+    def __init__(self, studentID, firstName, lastName, programCode, yearLevel, gender):
+        self.studentID = studentID
+        self.firstName = firstName
+        self.lastName = lastName
+        self.programCode = programCode
+        self.yearLevel = yearLevel
+        self.gender = gender
 
-    studentID = db.Column('studentid', db.String(10), primary_key=True)
-    firstName = db.Column('firstname', db.String(50), nullable=False)
-    lastName = db.Column('lastname', db.String(50), nullable=False)
-    programCode = db.Column('programcode', db.String(10), db.ForeignKey('program.programcode'))
-    yearLevel = db.Column('yearlevel', db.Integer, nullable=False)
-    gender = db.Column('gender', db.String(10), nullable=False)
-    
 
     def serialize(self):
         return {
@@ -20,3 +19,55 @@ class Student(db.Model):
             'yearLevel': self.yearLevel,
             'gender': self.gender
         }
+    
+    def add(self):
+        db = get_db()
+        cursor = db.cursor()
+        sql = "INSERT INTO student (studentid, firstname, lastname, programcode, yearlevel, gender) VALUES (%s, %s, %s, %s, %s, %s)"
+        cursor.execute(sql, (self.studentID, self.firstName, self.lastName, self.programCode, self.yearLevel, self.gender))
+        db.commit()
+        cursor.close()
+
+    def update(self, originalcode):
+        db = get_db()
+        cursor = db.cursor()
+        sql = "UPDATE student SET studentid = %s, firstname = %s, lastname = %s, programcode = %s, yearlevel = %s, gender = %s WHERE studentid = %s"
+        cursor.execute(sql, (self.studentID, self.firstName, self.lastName, self.programCode, self.yearLevel, self.gender, originalcode))
+        db.commit()
+        cursor.close()
+
+    def delete(self):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM student WHERE studentid = %s", (self.studentID,))
+        db.commit()
+        cursor.close()
+
+    @classmethod
+    def get(cls, studentID):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student WHERE studentid = %s", (studentID,))
+        row = cursor.fetchone()
+        cursor.close()
+        return cls(*row) if row else None
+    
+    @classmethod
+    def all(cls):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student ORDER BY lastname")
+        rows = cursor.fetchall()
+        cursor.close()
+        return [cls(*row) for row in rows]
+    
+    @classmethod
+    def exists(cls, studentID):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT 1 FROM student WHERE LOWER(studentid) = LOWER(%s)", (studentID,))
+        exists = cursor.fetchone() is not None
+        cursor.close()
+        return exists
+
+

@@ -4,8 +4,11 @@ from flask_jwt_extended import JWTManager
 from app.extensions import db, migrate
 from app.routes import register_routes
 from config import Config
+from dotenv import load_dotenv
+
 
 def create_app():
+    load_dotenv()
     app = Flask(__name__)
     app.config.from_object(Config)
 

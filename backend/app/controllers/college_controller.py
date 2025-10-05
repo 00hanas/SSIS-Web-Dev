@@ -1,8 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.college import College
-from app.extensions import db
 from app.forms.college_form import CollegeForm
-from sqlalchemy import cast
+from app.database import get_db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 college_bp = Blueprint("college_bp", __name__, url_prefix="/api/colleges")
@@ -16,15 +15,11 @@ def create_college():
     if not form.is_valid():
         return jsonify({"error": form.errors[0]}), 400
 
-    existing = College.query.filter(
-        db.func.lower(College.collegeCode) == form.collegeCode.lower()
-    ).first()
-    if existing:
+    if College.exists(form.collegeCode):
         return jsonify({"error": "College code already exists"}), 409
 
-    college = College(**form.to_dict())
-    db.session.add(college)
-    db.session.commit()
+    college = College(form.collegeCode, form.collegeName)
+    college.add()
 
     print(f"[CREATE] User {current_user_id} created college {form.collegeCode}")
     return jsonify({'message': 'College created', 'college': college.serialize()}), 201
@@ -34,7 +29,10 @@ def create_college():
 @jwt_required()
 def get_college(collegeCode):
     current_user_id = get_jwt_identity()
-    college = College.query.get_or_404(collegeCode)
+    college = College.get(collegeCode)
+    if not college:
+        return jsonify({"error": "College not found"}), 404
+
     print(f"[READ] User {current_user_id} accessed college {collegeCode}")
     return jsonify(college.serialize())
 
@@ -43,95 +41,113 @@ def get_college(collegeCode):
 @jwt_required()
 def update_college(collegeCode):
     current_user_id = get_jwt_identity()
-    college = College.query.get_or_404(collegeCode)
-    data = request.get_json()
-    form = CollegeForm(data)
+    existing_college = College.get(collegeCode)
+    if not existing_college:
+        return jsonify({"error": "College not found"}), 404
 
+    form = CollegeForm(request.get_json())
     if not form.is_valid():
         return jsonify({"error": form.errors[0]}), 400
 
-    if form.collegeCode.lower() != college.collegeCode.lower():
-        existing = College.query.filter(
-            db.func.lower(College.collegeCode) == form.collegeCode.lower(),
-            db.func.lower(College.collegeCode) != college.collegeCode.lower()
-        ).first()
-        if existing:
-            return jsonify({"error": "College code already exists"}), 409
+    if form.collegeCode.lower() != collegeCode.lower() and College.exists(form.collegeCode):
+        return jsonify({"error": "College code already exists"}), 409
 
-    college.collegeCode = form.collegeCode
-    college.collegeName = form.collegeName
-    db.session.commit()
+    updated_college = College(form.collegeCode, form.collegeName)
+    updated_college.update(collegeCode)
 
     print(f"[UPDATE] User {current_user_id} updated college {collegeCode}")
-    return jsonify({'message': 'College updated', 'college': college.serialize()})
+    return jsonify({'message': 'College updated', 'college': updated_college.serialize()})
 
 #delete
-from app.models.program import Program
 @college_bp.route('/<collegeCode>', methods=['DELETE'])
 @jwt_required()
 def delete_college(collegeCode):
     current_user_id = get_jwt_identity()
-    college = College.query.get_or_404(collegeCode)
+    college = College.get(collegeCode)
+    if not college:
+        return jsonify({"error": "College not found"}), 404
 
     try:
-        programs = Program.query.filter_by(collegeCode=collegeCode).all()
-        for program in programs:
-            program.collegeCode = None
+        db = get_db()
+        cursor = db.cursor()
 
-        db.session.delete(college)
-        db.session.commit()
+        cursor.execute("UPDATE program SET collegeCode = NULL WHERE collegeCode = %s", (collegeCode,))
+        college.delete()
 
         print(f"[DELETE] User {current_user_id} deleted college {collegeCode}")
         return jsonify({'message': f'College {collegeCode} deleted and programs updated.'}), 200
     except Exception as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 #page display with search and sort
 @college_bp.route('', methods=['GET'])
 @jwt_required()
 def list_colleges():
-    current_user_id = get_jwt_identity()
-    print("Authenticated user:", current_user_id)
-    query = College.query
+    try:
+        current_user_id = get_jwt_identity()
+        print("Authenticated user:", current_user_id)
 
-    search = request.args.get('search', '').lower()
-    searchBy = request.args.get('searchBy', 'all')
-    if search:
-        if searchBy == 'collegeCode':
-            query = query.filter(cast(College.collegeCode, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'collegeName':
-            query = query.filter(cast(College.collegeName, db.String).ilike(f'%{search}%'))
-        elif searchBy == 'all':
-            query = query.filter(
-                db.or_(
-                    cast(College.collegeCode, db.String).ilike(f'%{search}%'),
-                    cast(College.collegeName, db.String).ilike(f'%{search}%')
-                )
-            )
+        search = request.args.get('search', '').lower()
+        searchBy = request.args.get('searchBy', 'all')
+        sortBy = request.args.get('sortBy', 'collegeCode')
+        order = request.args.get('order', 'asc')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 15))
+        offset = (page - 1) * per_page
 
-    sortBy = request.args.get('sortBy', 'collegeCode')
-    order = request.args.get('order', 'asc')
-    if hasattr(College, sortBy):
-        sort_column = getattr(College, sortBy)
-        query = query.order_by(db.desc(sort_column) if order == 'desc' else sort_column)
+        db = get_db()
+        cursor = db.cursor()
 
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 15))
-    colleges = query.paginate(page=page, per_page=per_page, error_out=False)
+        # Build WHERE clause
+        where_clauses = []
+        params = []
 
-    print(f"[LIST] User {current_user_id} viewed college list with search='{search}' and sort='{sortBy}:{order}'")
-    return jsonify({
-        'colleges': [c.serialize() for c in colleges.items],
-        'total': colleges.total,
-        'pages': colleges.pages,
-        'current_page': colleges.page
-    })
+        if search:
+            like = f"%{search}%"
+            if searchBy == 'collegeCode':
+                where_clauses.append("LOWER(collegecode) LIKE %s")
+                params.append(like)
+            elif searchBy == 'collegeName':
+                where_clauses.append("LOWER(collegename) LIKE %s")
+                params.append(like)
+            elif searchBy == 'all':
+                where_clauses.append("(LOWER(collegecode) LIKE %s OR LOWER(collegename) LIKE %s)")
+                params.extend([like, like])
 
+        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        sort_sql = f"ORDER BY {sortBy} {'DESC' if order == 'desc' else 'ASC'}"
+
+        # Count total
+        cursor.execute(f"SELECT COUNT(*) FROM college {where_sql}", params)
+        total = cursor.fetchone()[0]
+
+        # Fetch paginated results
+        cursor.execute(
+            f"SELECT collegecode, collegename FROM college {where_sql} {sort_sql} LIMIT %s OFFSET %s",
+            params + [per_page, offset]
+        )
+        rows = cursor.fetchall()
+        colleges = [College(code, name).serialize() for code, name in rows]
+
+        pages = (total + per_page - 1) // per_page
+
+        return jsonify({
+            'colleges': colleges,
+            'total': total,
+            'pages': pages,
+            'current_page': page
+        })
+
+    except Exception as e:
+        print("🔥 Error in list_colleges:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# Dropdown
 @college_bp.route('/dropdown', methods=['GET'])
 @jwt_required()
 def list_colleges_for_dropdown():
-    colleges = College.query.order_by(College.collegeName).all()
+    colleges = College.all()
     return jsonify({
         'colleges': [c.serialize() for c in colleges]
     })

@@ -1,142 +1,151 @@
 from flask import Blueprint, request, jsonify
 from app.models.student import Student
-from app.extensions import db
 from app.forms.student_form import StudentForm
-from sqlalchemy import cast, or_
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.database import get_db
 
 student_bp = Blueprint("student_bp", __name__, url_prefix="/api/students")
 
-#add
+# Create
 @student_bp.route('/create', methods=['POST'])
 @jwt_required()
 def create_student():
     current_user_id = get_jwt_identity()
+    form = StudentForm(request.get_json())
+
+    if not form.is_valid():
+        return jsonify({"error": form.errors[0]}), 400
+
+    if Student.exists(form.studentID):
+        return jsonify({"error": "Student ID already exists"}), 409
+
+    student = Student(form.studentID, form.firstName, form.lastName, form.programCode, form.yearLevel, form.gender)
+    student.add()
+
+    print(f"[CREATE] User {current_user_id} created student {student.studentID}")
+    return jsonify({'message': 'Student created', 'student': student.serialize()}), 201
+
+# Read
+@student_bp.route('/<studentID>', methods=['GET'])
+@jwt_required()
+def get_student(studentID):
+    student = Student.get(studentID)
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+    print(f"[READ] Student {studentID} data accessed")
+    return jsonify(student.serialize())
+
+# Update
+@student_bp.route('/<studentID>', methods=['PUT'])
+@jwt_required()
+def update_student(studentID):
+    current_user_id = get_jwt_identity()
+    existing_student = Student.get(studentID)
+    if not existing_student:
+        return jsonify({"error": "Student not found"}), 404
 
     form = StudentForm(request.get_json())
     if not form.is_valid():
         return jsonify({"error": form.errors[0]}), 400
 
-    existing = Student.query.filter(
-        db.func.lower(Student.studentID) == form.studentID.lower()
-    ).first()
-    if existing:
+    if form.studentID.lower() != studentID.lower() and Student.exists(form.studentID):
         return jsonify({"error": "Student ID already exists"}), 409
 
-    student = Student(**form.to_dict())
-    db.session.add(student)
-    db.session.commit()
+    updated_student = Student(form.studentID, form.firstName, form.lastName, form.programCode, form.yearLevel, form.gender)
+    updated_student.update(studentID)
 
-    print(f"[CREATE] User {current_user_id} created student {student.studentID}")
-    return jsonify({'message': 'Student created', 'student': student.serialize()}), 201
+    print(f"[UPDATE] User {current_user_id} updated student {studentID}")
+    return jsonify({'message': 'Student updated', 'student': updated_student.serialize()})
 
-#edit (for pre-filled data)
-@student_bp.route('/<studentID>', methods=['GET'])
-@jwt_required()
-def get_student(studentID):
-    student = Student.query.get_or_404(studentID)
-    print(f"[READ] Student {studentID} data accessed")
-    return jsonify(student.serialize())
-
-#update
-@student_bp.route('/<studentID>', methods=['PUT'])
-@jwt_required()
-def update_student(studentID):
-    current_user_id = get_jwt_identity()
-    student = Student.query.get_or_404(studentID)
-    data = request.get_json()
-    form = StudentForm(data)
-
-    if not form.is_valid():
-        return jsonify({"error": form.errors[0]}), 400
-    
-    if form.studentID.lower() != student.studentID.lower():
-        existing = Student.query.filter(
-            db.func.lower(Student.studentID) == form.studentID.lower(),
-            db.func.lower(Student.studentID) != student.studentID.lower()
-        ).first()
-        if existing:
-            return jsonify({"error": "Student ID already exists"}), 409
-        
-    student.studentID = form.studentID
-    student.firstName = form.firstName
-    student.lastName = form.lastName
-    student.programCode = form.programCode
-    student.yearLevel = form.yearLevel
-    student.gender = form.gender
-    db.session.commit()
-
-    print(f"[UPDATE] User {current_user_id} updated student {student.studentID}")
-    return jsonify({'message': 'Student updated', 'student': student.serialize()})
-
-#delete
+# Delete
 @student_bp.route('/<studentID>', methods=['DELETE'])
 @jwt_required()
 def delete_student(studentID):
     current_user_id = get_jwt_identity()
-    student = Student.query.get_or_404(studentID)
-    db.session.delete(student)
-    db.session.commit()
+    student = Student.get(studentID)
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
 
+    student.delete()
     print(f"[DELETE] User {current_user_id} deleted student {studentID}")
     return jsonify({'message': f'Student {studentID} deleted'})
 
-#page display with search and sort
 @student_bp.route('', methods=['GET'])
 @jwt_required()
 def list_students():
-    print("Query string:", request.query_string.decode())
-    current_user_id = get_jwt_identity()
-    query = Student.query
-
-    allowed_search_fields = {"all", "studentID", "firstName", "lastName", "programCode", "yearLevel", "gender"}
-    allowed_sort_fields = {"studentID", "firstName", "lastName", "programCode", "yearLevel", "gender"}
-
-    search = request.args.get('search', '').lower()
-    searchBy = request.args.get('searchBy', 'all')
-    sortBy = request.args.get('sortBy', 'lastName')
-    order = request.args.get('order', 'asc')
-
-    if searchBy not in allowed_search_fields:
-        return jsonify({"error": f"Invalid searchBy: {searchBy}"}), 422
-    if sortBy not in allowed_sort_fields:
-        return jsonify({"error": f"Invalid sortBy: {sortBy}"}), 422
-    if order not in {"asc", "desc"}:
-        return jsonify({"error": f"Invalid order: {order}"}), 422
-
-    if search:
-        filters = {
-            "studentID": Student.studentID,
-            "firstName": Student.firstName,
-            "lastName": Student.lastName,
-            "programCode": Student.programCode,
-            "yearLevel": Student.yearLevel,
-            "gender": Student.gender
-        }
-        if searchBy == "all":
-            query = query.filter(
-                db.or_(*[cast(col, db.String).ilike(f"%{search}%") for col in filters.values()])
-            )
-        else:
-            query = query.filter(cast(filters[searchBy], db.String).ilike(f"%{search}%"))
-
-    sort_column = getattr(Student, sortBy)
-    query = query.order_by(db.desc(sort_column) if order == "desc" else sort_column)
-
     try:
-        page = int(request.args.get("page", 1))
-        per_page = int(request.args.get("per_page", 15))
-    except ValueError:
-        return jsonify({"error": "Invalid pagination parameters"}), 422
+        current_user_id = get_jwt_identity()
+        db = get_db()
+        cursor = db.cursor()
 
-    students = query.paginate(page=page, per_page=per_page, error_out=False)
+        search = request.args.get('search', '').lower()
+        searchBy = request.args.get('searchBy', 'all')
+        sortBy = request.args.get('sortBy', 'lastName')
+        order = request.args.get('order', 'asc')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 15))
+        offset = (page - 1) * per_page
 
-    print(f"[LIST] User {current_user_id} viewed student list with search='{search}' and sort='{sortBy}:{order}'")
-    return jsonify({
-        "students": [s.serialize() for s in students.items],
-        "total": students.total,
-        "pages": students.pages,
-        "current_page": students.page
-    })
+        # Build WHERE clause
+        where_clauses = []
+        params = []
 
+        if search:
+            like = f"%{search}%"
+            if searchBy == 'studentid':
+                where_clauses.append("LOWER(studentid) LIKE %s")
+                params.append(like)
+            elif searchBy == 'firstname':
+                where_clauses.append("LOWER(firstname) LIKE %s")
+                params.append(like)
+            elif searchBy == 'lastname':
+                where_clauses.append("LOWER(lastname) LIKE %s")
+                params.append(like)
+            elif searchBy == 'programcode':
+                where_clauses.append("LOWER(programcode) LIKE %s")
+                params.append(like)
+            elif searchBy == 'yearlevel':
+                where_clauses.append("LOWER(yearlevel) LIKE %s")
+                params.append(like)
+            elif searchBy == 'gender':
+                where_clauses.append("LOWER(gender) LIKE %s")
+                params.append(like)
+            elif searchBy == 'all':
+                where_clauses.append("(" +
+                    "LOWER(studentid) LIKE %s OR " +
+                    "LOWER(firstname) LIKE %s OR " +
+                    "LOWER(lastname) LIKE %s OR " +
+                    "LOWER(programcode) LIKE %s OR " +
+                    "CAST(yearlevel AS TEXT) LIKE %s OR " +  # ✅ cast to text
+                    "LOWER(gender) LIKE %s" +
+                ")")
+                params.extend([like] * 6)
+
+        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        sort_sql = f"ORDER BY {sortBy} {'DESC' if order == 'desc' else 'ASC'}"
+
+        cursor.execute(f"SELECT COUNT(*) FROM student {where_sql}", params)
+        total = cursor.fetchone()[0]
+
+        # Fetch paginated results
+        cursor.execute(
+            f"SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student {where_sql} {sort_sql} LIMIT %s OFFSET %s",
+            params + [per_page, offset]
+        )
+        rows = cursor.fetchall()
+        students = [Student(studentid, firstname, lastname, programcode, yearlevel, gender).serialize() for studentid, firstname, lastname, programcode, yearlevel, gender in rows]
+        pages = (total + per_page - 1) // per_page
+
+        print(f"[LIST] User {current_user_id} viewed student list with search='{search}' and sort='{sortBy}:{order}'")
+        return jsonify({
+            "students": students,
+            "total": total,
+            "pages": pages,
+            "current_page": page
+        })
+
+    except Exception as e:
+        print("🔥 Error in list_students:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
 

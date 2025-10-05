@@ -2,9 +2,6 @@ import { College } from "@/app/table/college-columns"
 
 const BASE_URL = "http://127.0.0.1:5000/api/colleges"
 
-function sanitizeQuery(value: string | undefined): string {
-  return value?.trim() === "search" ? "" : value?.trim() || ""
-}
 
 export const fetchColleges = async (
   page: number = 1,
@@ -24,7 +21,7 @@ export const fetchColleges = async (
   const params = new URLSearchParams({
     page: page.toString(),
     per_page: perPage.toString(),
-    search: sanitizeQuery(search),
+    search,
     searchBy: safeSearchBy,
     sortBy,
     order
