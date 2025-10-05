@@ -26,42 +26,25 @@ type EditProgramDialogProps = {
         programName: string
         collegeCode: string
     }
+    visible: boolean
+    onClose: () => void
     onProgramUpdated?: () => void
 }
 
-export function EditProgramDialog( { program, onProgramUpdated }: EditProgramDialogProps) {
+export function EditProgramDialog( { program, visible, onClose, onProgramUpdated }: EditProgramDialogProps) {
   const [colleges, setColleges] = useState<College[]>([])
   const [programCode, setPcode] = useState(program.programCode)
   const [programName, setName] = useState(program.programName)
   const [collegeCode, setCcode] = useState(program.collegeCode)
   const [updatedProgram, setUpdatedProgram] = useState<Program | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
-  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    if (program?.programCode) {
-      setIsOpen(true)
+    if (visible) {
       setPcode(program.programCode)
       setName(program.programName)
       setCcode(program.collegeCode)
       setErrorMessage("")
-    }
-  }, [program.programCode])
-
-  useEffect(() => {
-  const loadColleges = async () => {
-    try {
-      const data = await fetchCollegesForDropdown()
-      setColleges(data)
-    } catch (error) {
-      console.error("Failed to load colleges:", error)
-    }
-  }
-  loadColleges()
-  }, [])
-
-  useEffect (() => {
-    if (isOpen) {
       const loadProgramData = async () => {
         try {
           const data = await fetchProgram(program.programCode)
@@ -74,7 +57,19 @@ export function EditProgramDialog( { program, onProgramUpdated }: EditProgramDia
       }
       loadProgramData()
     }
-  }, [isOpen, program.programCode])
+  }, [visible, program.programCode])
+
+  useEffect(() => {
+  const loadColleges = async () => {
+    try {
+      const data = await fetchCollegesForDropdown()
+      setColleges(data)
+    } catch (error) {
+      console.error("Failed to load colleges:", error)
+    }
+  }
+  loadColleges()
+  }, [])
 
   const handleEditProgram = async () => {
     const originalCode = program.programCode
@@ -97,7 +92,6 @@ export function EditProgramDialog( { program, onProgramUpdated }: EditProgramDia
       const response = await updateProgram(originalCode, programCode, programName, collegeCode)
       setUpdatedProgram(response)
       setErrorMessage("")
-      setIsOpen(false)
     } catch (error: any) {
       if (error.message === "Program code already exists") {
         setErrorMessage(`Program Code (${programCode}) is already taken.`)
@@ -109,23 +103,10 @@ export function EditProgramDialog( { program, onProgramUpdated }: EditProgramDia
     }
   }
 
-  const resetForm = () => {
-    setPcode(program.programCode)
-    setName(program.programName)
-    setCcode(program.collegeCode)
-    setErrorMessage("")
-  }
-
-  const handleDialogCLose = () => {
-    resetForm()
-    setIsOpen(false)
-  }
-
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => {
-          if (!open) handleDialogCLose()
-          else setIsOpen(true)
+      <Dialog open={visible} onOpenChange={(open) => {
+        if (!open) onClose()
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -187,6 +168,7 @@ export function EditProgramDialog( { program, onProgramUpdated }: EditProgramDia
         onClose={() => {
           setUpdatedProgram(null)
           onProgramUpdated?.()
+          onClose()
         }}
       />
     )}

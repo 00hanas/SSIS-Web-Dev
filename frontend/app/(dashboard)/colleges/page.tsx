@@ -150,6 +150,8 @@ export default function CollegesPage() {
             {selectedCollege && (
               <EditCollegeDialog
                 college={selectedCollege ?? { collegeCode: "", collegeName: "" }}
+                visible={true}
+                onClose={() => setSelectedCollege(null)}
                 onCollegeUpdated={() => {
                   loadColleges()
                   setSelectedCollege(null)
@@ -160,6 +162,8 @@ export default function CollegesPage() {
             {collegeToDelete && (
               <DeleteCollegeDialog
                 college={collegeToDelete}
+                visible={true}
+                onClose={() => setCollegeToDelete(null)}
                 onCollegeDeleted={() => {
                   loadColleges()
                   setCollegeToDelete(null)

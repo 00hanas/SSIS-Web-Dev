@@ -10,43 +10,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { deleteCollege, fetchCollege } from "@/lib/college-api"
-import { useEffect, useState } from "react"
+import { deleteCollege } from "@/lib/college-api"
+import { useState } from "react"
 
 interface DeleteCollegeDialogProps {
   college: College
+  visible: boolean
+  onClose: () => void
   onCollegeDeleted?: () => void
 }
 
-export function DeleteCollegeDialog({ college, onCollegeDeleted }: DeleteCollegeDialogProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function DeleteCollegeDialog({ college, visible, onClose, onCollegeDeleted }: DeleteCollegeDialogProps) {
   const [deletedCollege, setDeletedCollege] = useState<College | null>(null)
-
-  useEffect(() => {
-    if (college?.collegeCode) {
-      setIsOpen(true)
-    }
-  }, [college.collegeCode])
 
   const handleDeleteCollege = async () => {
     try {
       await deleteCollege(college.collegeCode)
       setDeletedCollege(college)
-      setIsOpen(false)
     } catch (error) {
       console.error("Failed to delete college:", error)
     }
   }
 
-  const handleDialogClose = () => {
-    setIsOpen(false)
-  }
-
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) handleDialogClose()
-        else setIsOpen(true)
+      <Dialog open={visible} onOpenChange={(open) => {
+        if (!open) onClose()
       }}>
         <DialogContent>
           <DialogHeader>
@@ -54,7 +43,7 @@ export function DeleteCollegeDialog({ college, onCollegeDeleted }: DeleteCollege
           </DialogHeader>
           <p>Are you sure you want to delete <strong>{college.collegeName}</strong> ({college.collegeCode})?</p>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => onClose()}>Cancel</Button>
             <Button variant="destructive" onClick={handleDeleteCollege}>Delete</Button>
           </DialogFooter>
         </DialogContent>
@@ -68,6 +57,7 @@ export function DeleteCollegeDialog({ college, onCollegeDeleted }: DeleteCollege
           onClose={() => {
             setDeletedCollege(null)
             onCollegeDeleted?.()
+            onClose()
           }}
         />
       )}

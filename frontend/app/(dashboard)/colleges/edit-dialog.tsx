@@ -22,27 +22,22 @@ type EditCollegeDialogProps = {
     collegeCode: string
     collegeName: string
   }
+  visible: boolean
+  onClose: () => void
   onCollegeUpdated?: () => void
 }
 
-export function EditCollegeDialog({ college, onCollegeUpdated }: EditCollegeDialogProps) {
+export function EditCollegeDialog({ college, visible, onClose, onCollegeUpdated }: EditCollegeDialogProps) {
   const [collegeCode, setCcode] = useState(college.collegeCode)
   const [collegeName, setName] = useState(college.collegeName)
   const [updatedCollege, setUpdatedCollege] = useState<College | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
-  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    if (college?.collegeCode) {
-      setIsOpen(true)
+    if (visible) {
       setCcode(college.collegeCode)
       setName(college.collegeName)
       setErrorMessage("")
-    }
-  }, [college.collegeCode])
-
-  useEffect(() => {
-    if (isOpen) {
       const loadCollegeData = async () => {
         try {
           const data = await fetchCollege(college.collegeCode)
@@ -54,7 +49,7 @@ export function EditCollegeDialog({ college, onCollegeUpdated }: EditCollegeDial
       }
       loadCollegeData()
     }
-  }, [isOpen, college.collegeCode])
+  }, [visible, college.collegeCode])
 
   const handleEditCollege = async () => {
     const originalCode = college.collegeCode
@@ -76,7 +71,6 @@ export function EditCollegeDialog({ college, onCollegeUpdated }: EditCollegeDial
       const response = await updateCollege(originalCode, collegeCode, collegeName)
       setUpdatedCollege(response)
       setErrorMessage("")
-      setIsOpen(false)
     } catch (error: any) {
       if (error.message === "College code already exists") {
         setErrorMessage(`College Code (${collegeCode}) is already taken.`)
@@ -88,22 +82,10 @@ export function EditCollegeDialog({ college, onCollegeUpdated }: EditCollegeDial
     }
   }
 
-  const resetForm = () => {
-    setCcode(college.collegeCode)
-    setName(college.collegeName)
-    setErrorMessage("")
-  }
-
-  const handleDialogClose = () => {
-    resetForm()
-    setIsOpen(false)
-  }
-
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) handleDialogClose()
-        else setIsOpen(true)
+      <Dialog open={visible} onOpenChange={(open) => {
+        if (!open) onClose()
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -152,6 +134,7 @@ export function EditCollegeDialog({ college, onCollegeUpdated }: EditCollegeDial
           onClose={() => {
             setUpdatedCollege(null)
             onCollegeUpdated?.()
+            onClose()
           }}
         />
       )}

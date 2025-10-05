@@ -29,10 +29,12 @@ type EditStudentDialogProps = {
         yearLevel: number
         gender: string
     }
+    visible: boolean
+    onClose: () => void
     onStudentUpdated?: () => void
 }
 
-export function EditStudentDialog( {student, onStudentUpdated }: EditStudentDialogProps) {
+export function EditStudentDialog( {student, visible, onClose, onStudentUpdated }: EditStudentDialogProps) {
     const [programs, setPrograms] = useState<Program[]>([])
     const [studentID, setId] = useState(student.studentID)
     const [firstName, setFname] = useState(student.firstName)
@@ -42,112 +44,9 @@ export function EditStudentDialog( {student, onStudentUpdated }: EditStudentDial
     const [gender, setGender] = useState(student.gender)
     const [updatedStudent, setUpdatedStudent] = useState<Student | null>(null)
     const [errorMessage, setErrorMessage] = useState("")
-    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
-        if (student?.studentID) {
-            setIsOpen(true)
-            setId(student.studentID)
-            setFname(student.firstName)
-            setLname(student.lastName)
-            setPcode(student.programCode)
-            setYlevel(student.yearLevel)
-            setGender(student.gender)
-            setErrorMessage("")
-        } 
-    }, [student.studentID])
-
-    useEffect(() => {
-        const loadPrograms = async () => {
-          try {
-            const data = await fetchProgramsForDropdown()
-            setPrograms(data)
-          } catch (error) {
-            console.error("Failed to load programs:", error)
-            setPrograms([])
-          }
-        }
-        loadPrograms()
-      }, [])
-
-      useEffect (() => {
-          if (isOpen) {
-            const loadStudentData = async () => {
-              try {
-                const data = await fetchStudent(student.studentID)
-                setId(data.studentID)
-                setFname(data.firstName)
-                setLname(data.lastName)
-                setPcode(data.programCode)
-                setYlevel(data.yearLevel)
-                setGender(data.gender)
-              } catch (error) {
-                console.error("Failed to fetch program data:", error)
-              }
-            }
-            loadStudentData()
-          }
-        }, [isOpen, student.studentID])
-
-    const handleEditStudent = async () => {
-        const originalId = student.studentID
-        const studentIdPattern = /^\d{4}-\d{4}$/
-
-        if (
-            !studentID.trim() ||
-            !firstName.trim() ||
-            !lastName.trim() ||
-            !programCode.trim() ||
-            !yearLevel.toString().trim() ||
-            !gender.trim()
-        ) {
-            setErrorMessage("Please fill in all fields.")
-            return
-        }
-
-        if (!studentIdPattern.test(studentID.trim())) {
-            setErrorMessage("Student ID must follow the format YYYY-NNNN.")
-            return
-        }
-
-        if (
-            studentID.trim() === originalId.trim() &&
-            firstName.trim() === student.firstName.trim() &&
-            lastName.trim() === student.lastName.trim() &&
-            programCode.trim() === student.programCode.trim() &&
-            yearLevel.toString().trim() === student.yearLevel.toString().trim() &&
-            gender.trim() === student.gender.trim()
-        ) {
-            setErrorMessage("No changes detected.")
-            return
-        }
-
-        try {
-            const response = await updateStudent(
-            originalId,
-            studentID.trim(),
-            firstName.trim(),
-            lastName.trim(),
-            programCode.trim(),
-            parseInt(yearLevel.toString().trim()),
-            gender.trim()
-            )
-            setUpdatedStudent(response)
-            setErrorMessage("")
-            setIsOpen(false)
-        } catch (error: any) {
-            const msg = error.message
-            if (msg === "Student ID already exists") {
-            setErrorMessage(`Student ID (${studentID}) is already taken.`)
-            } else if (msg === "Missing required fields") {
-            setErrorMessage("Please fill in all fields.")
-            } else {
-            setErrorMessage("Something went wrong. Try again.")
-            }
-        }
-    }
-
-    const resetForm = () => {
+        if (visible) {
         setId(student.studentID)
         setFname(student.firstName)
         setLname(student.lastName)
@@ -155,19 +54,100 @@ export function EditStudentDialog( {student, onStudentUpdated }: EditStudentDial
         setYlevel(student.yearLevel)
         setGender(student.gender)
         setErrorMessage("")
-    }
 
-    const handleDialogClose = () => {
-        resetForm()
-        setIsOpen(false)
-    }
+        const loadStudentData = async () => {
+            try {
+            const data = await fetchStudent(student.studentID)
+            setId(data.studentID)
+            setFname(data.firstName)
+            setLname(data.lastName)
+            setPcode(data.programCode)
+            setYlevel(data.yearLevel)
+            setGender(data.gender)
+            } catch (error) {
+            console.error("Failed to fetch student data:", error)
+            }
+        }
 
+        loadStudentData()
+        }
+    }, [visible, student.studentID])
+
+    useEffect(() => {
+        const loadPrograms = async () => {
+        try {
+            const data = await fetchProgramsForDropdown()
+            setPrograms(data)
+        } catch (error) {
+            console.error("Failed to load programs:", error)
+            setPrograms([])
+        }
+        }
+
+        loadPrograms()
+    }, [])
+
+    const handleEditStudent = async () => {
+        const originalId = student.studentID
+        const studentIdPattern = /^\d{4}-\d{4}$/
+
+        if (
+        !studentID.trim() ||
+        !firstName.trim() ||
+        !lastName.trim() ||
+        !programCode.trim() ||
+        !yearLevel.toString().trim() ||
+        !gender.trim()
+        ) {
+        setErrorMessage("Please fill in all fields.")
+        return
+        }
+
+        if (!studentIdPattern.test(studentID.trim())) {
+        setErrorMessage("Student ID must follow the format YYYY-NNNN.")
+        return
+        }
+
+        if (
+        studentID.trim() === originalId.trim() &&
+        firstName.trim() === student.firstName.trim() &&
+        lastName.trim() === student.lastName.trim() &&
+        programCode.trim() === student.programCode.trim() &&
+        yearLevel === student.yearLevel &&
+        gender.trim() === student.gender.trim()
+        ) {
+        setErrorMessage("No changes detected.")
+        return
+        }
+
+        try {
+        const response = await updateStudent(
+            originalId,
+            studentID.trim(),
+            firstName.trim(),
+            lastName.trim(),
+            programCode.trim(),
+            yearLevel,
+            gender.trim()
+        )
+        setUpdatedStudent(response)
+        setErrorMessage("")
+        } catch (error: any) {
+        const msg = error.message
+        if (msg === "Student ID already exists") {
+            setErrorMessage(`Student ID (${studentID}) is already taken.`)
+        } else if (msg === "Missing required fields") {
+            setErrorMessage("Please fill in all fields.")
+        } else {
+            setErrorMessage("Something went wrong. Try again.")
+        }
+        }
+    }
 
     return (
         <>
-        <Dialog open={isOpen} onOpenChange={(open) => {
-            if (!open) handleDialogClose()
-            else setIsOpen(true)
+        <Dialog open={visible} onOpenChange={(open) => {
+            if (!open) onClose()
         }}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
@@ -268,6 +248,7 @@ export function EditStudentDialog( {student, onStudentUpdated }: EditStudentDial
         onClose={() => {
             setUpdatedStudent(null)
             onStudentUpdated?.()
+            onClose()
         }}
         />
     )}

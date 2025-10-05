@@ -154,6 +154,8 @@ export default function StudentsPage() {
               {selectedStudent && (
                 <EditStudentDialog
                   student={selectedStudent ?? { studentID: "", firstName: "", lastName: "", programCode: "", yearLevel: "", gender: "" }}
+                  visible={true}
+                  onClose={() => setSelectedStudent(null)}
                   onStudentUpdated={() => {
                     loadStudents()
                     setSelectedStudent(null)
@@ -164,6 +166,8 @@ export default function StudentsPage() {
               {studentToDelete && (
                 <DeleteStudentDialog
                   student={studentToDelete}
+                  visible={true}
+                onClose={() => setStudentToDelete(null)}
                   onStudentDeleted={() => {
                     loadStudents()
                     setStudentToDelete(null)

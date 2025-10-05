@@ -152,6 +152,8 @@ export default function ProgramsPage() {
             {selectedProgram && (
               <EditProgramDialog
                 program={selectedProgram ?? { programCode: "", programName: "", collegeCode: "" }}
+                visible={true}
+                onClose={() => setSelectedProgram(null)}
                 onProgramUpdated={() => {
                   loadPrograms()
                   setSelectedProgram(null)
@@ -162,6 +164,8 @@ export default function ProgramsPage() {
             {programToDelete && (
               <DeleteProgramDialog
                 program={programToDelete}
+                visible={true}
+                onClose={() => setProgramToDelete(null)}
                 onProgramDeleted={() => {
                   loadPrograms()
                   setProgramToDelete(null)

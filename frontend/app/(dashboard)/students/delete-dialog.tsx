@@ -6,56 +6,35 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { deleteStudent } from "@/lib/student-api"
-import { DeleteOutlineSharp as DeleteIcon } from '@mui/icons-material'
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 interface DeleteStudentDialogProps {
-  student: {
-    studentID: string
-    firstName: string
-    lastName: string
-    programCode: string
-    yearLevel: 1 | 2 | 3 | 4 | 5
-    gender: "Female" | "Male"
-  }
+  student: Student
+  visible: boolean
+  onClose: () => void
   onStudentDeleted?: () => void
 }
 
-export function DeleteStudentDialog({ student, onStudentDeleted }: DeleteStudentDialogProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function DeleteStudentDialog({ student, visible, onClose, onStudentDeleted }: DeleteStudentDialogProps) {
   const [deletedStudent, setDeletedStudent] = useState<Student | null>(null)
-
-  useEffect (() => {
-    if (student?.studentID) {
-      setIsOpen(true)
-    }
-  }, [student.studentID])
-
   const handleDeleteStudent = async () => {
     try {
       await deleteStudent(student.studentID)
       setDeletedStudent(student)
-      setIsOpen(false)
     } catch (error) {
       console.error("Failed to delete student:", error)
     }
   }
 
-  const handleDialogClose = () => {
-    setIsOpen(false)
-  }
-
   return (
     <>
-    <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) handleDialogClose()
-        else setIsOpen(true)
+    <Dialog open={visible} onOpenChange={(open) => {
+        if (!open) onClose()
       }}>
       <DialogContent>
         <DialogHeader>
@@ -63,7 +42,7 @@ export function DeleteStudentDialog({ student, onStudentDeleted }: DeleteStudent
         </DialogHeader>
         <p>Are you sure you want to delete <strong>{student.firstName} {student.lastName}</strong> ({student.studentID})</p>
         <DialogFooter>
-          <Button variant="secondary" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button variant="secondary" onClick={() => onClose()}>Cancel</Button>
           <Button variant="destructive" onClick={handleDeleteStudent}>Delete</Button>
         </DialogFooter>
       </DialogContent>
@@ -77,6 +56,7 @@ export function DeleteStudentDialog({ student, onStudentDeleted }: DeleteStudent
         onClose={() => {
           setDeletedStudent(null)
           onStudentDeleted?.()
+          onClose()
         }}
       />
     )}
