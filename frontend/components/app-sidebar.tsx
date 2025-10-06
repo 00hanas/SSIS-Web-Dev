@@ -3,6 +3,7 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
+  DashboardOutlined as DashboardIcon,
   School as CollegeIcon,
   LibraryBooks as ProgramIcon,
   EmojiPeople as StudentIcon,
@@ -41,6 +42,7 @@ import { useAuth } from "@/hooks/useAuth"
 
 
 const items = [
+  { title: "Dashboard", href: "/dashboard", icon: DashboardIcon},
   { title: "Colleges", href: "/colleges", icon: CollegeIcon },
   { title: "Programs", href: "/programs", icon: ProgramIcon },
   { title: "Students", href: "/students", icon: StudentIcon },
@@ -84,7 +86,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-     {user && (
+      {user && (
       <SidebarFooter className="border-t p-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -130,7 +132,7 @@ export function AppSidebar() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <div className="w-10 h-10 flex-shrink-0">
                   <img
                     src="/icon.jpg"

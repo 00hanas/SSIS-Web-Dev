@@ -69,5 +69,41 @@ class Student():
         exists = cursor.fetchone() is not None
         cursor.close()
         return exists
+    
+    @classmethod
+    def students_by_prog(cls, programCode):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student WHERE programcode = %s ORDER BY lastname", (programCode,))
+        rows = cursor.fetchall()
+        cursor.close()
+        return [cls(*row) for row in rows]
 
+    @classmethod
+    def student_count_by_prog(cls):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("""
+            SELECT programcode, COUNT(*) as student_count
+            FROM student
+            GROUP BY programcode
+            ORDER BY programcode
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows  
+    
+    @classmethod
+    def gender_count(cls):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("""
+            SELECT gender, COUNT(*) as student_count
+            FROM student
+            GROUP BY gender
+            ORDER BY gender
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows
 

@@ -42,7 +42,7 @@ export default function RootLayout({
           <SidebarProvider>
             <AppSidebar />
             <div className="flex flex-col w-full">
-              <header className="flex items-center justify-between p-4 border-b">
+              <header className="flex items-center justify-between p-4 border-b bg-card">
                 <div className="flex items-center gap-2 h-6">
                   <SidebarTrigger />
                   <VerticalSeparator />

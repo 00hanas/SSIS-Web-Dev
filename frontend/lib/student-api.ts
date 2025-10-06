@@ -132,3 +132,38 @@ export const deleteStudent = async (
 
   return await response.json()
 }
+
+export const fetchStudentsByProgram = async (programCode: string): Promise<Student[]> => {
+  const params = new URLSearchParams()
+  if (programCode !== "all") {
+    params.set("programCode", programCode)
+  }
+
+  const res = await fetch(`${BASE_URL}/by-program?${params.toString()}`, {
+    method: "GET",
+    credentials: "include",
+  })
+
+  if (!res.ok) throw new Error("Failed to fetch students by program")
+  const data = await res.json()
+  return data.students
+}
+
+export async function fetchStudentCountsByProgram() {
+  const res = await fetch("http://127.0.0.1:5000/api/students/count-by-program", {
+    method: "GET",
+    credentials: "include",
+  })
+  if (!res.ok) throw new Error("Failed to fetch counts")
+  return res.json()
+}
+
+export async function fetchStudentCountByGender() {
+  const res = await fetch("http://127.0.0.1:5000/api/students/count-by-gender", {
+    method: "GET",
+    credentials: "include",
+  })
+  if (!res.ok) throw new Error("Failed to fetch gender counts")
+  return res.json()
+}
+

@@ -149,3 +149,49 @@ def list_students():
         print("🔥 Error in list_students:", str(e))
         return jsonify({"error": "Internal server error"}), 500
 
+@student_bp.route("/by-program", methods=["GET"])
+@jwt_required()
+def get_students_by_program():
+    program_code = request.args.get("programCode")
+
+    try:
+        if not program_code or program_code.lower() == "all":
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student ORDER BY lastname")
+            rows = cursor.fetchall()
+            cursor.close()
+            students = [Student(*row).serialize() for row in rows]
+        else:
+            students = [s.serialize() for s in Student.students_by_prog(program_code)]
+
+        return jsonify({"students": students}), 200
+
+    except Exception as e:
+        print("Error fetching students by program:", e)
+        return jsonify({"error": "Failed to fetch students"}), 500
+
+@student_bp.route("/count-by-program", methods=["GET"])
+@jwt_required()
+def count_by_program():
+    try:
+        rows = Student.student_count_by_prog()
+        return jsonify([
+            {"programCode": row[0], "count": row[1]} for row in rows
+        ]), 200
+    except Exception as e:
+        print("Error fetching student counts:", e)
+        return jsonify({"error": "Failed to fetch student counts"}), 500
+
+@student_bp.route("/count-by-gender", methods=["GET"])
+@jwt_required()
+def count_by_gender():
+    try:
+        rows = Student.gender_count()
+        return jsonify([
+            {"gender": row[0], "count": row[1]} for row in rows
+        ]), 200
+    except Exception as e:
+        print("Error fetching gender counts:", e)
+        return jsonify({"error": "Failed to fetch gender counts"}), 500
+

@@ -28,7 +28,7 @@ export default function LoginForm({ className, ...props }: React.ComponentProps<
     }
     try {
       await loginUser(email, password)
-      router.push("/colleges")
+      router.push("/dashboard")
     } catch (err: any) {
       if (err.status === 404) {
         setError("This email is not registered.")
