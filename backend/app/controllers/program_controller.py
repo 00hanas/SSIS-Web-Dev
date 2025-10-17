@@ -157,3 +157,18 @@ def list_program_for_dropdown():
     return jsonify({
         'programs': [p.serialize() for p in programs]
     })
+
+#total programs
+@program_bp.route("/total", methods=["GET"])
+@jwt_required()
+def get_total_programs():
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM program")
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return jsonify({ "total": total }), 200
+    except Exception as e:
+        print("🔥 Error in get_total_programs:", str(e))
+        return jsonify({ "error": "Internal server error" }), 500

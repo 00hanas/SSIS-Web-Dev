@@ -151,3 +151,19 @@ def list_colleges_for_dropdown():
     return jsonify({
         'colleges': [c.serialize() for c in colleges]
     })
+
+#total colleges
+@college_bp.route("/total", methods=["GET"])
+@jwt_required()
+def get_total_colleges():
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM college")
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return jsonify({ "total": total }), 200
+    except Exception as e:
+        print("🔥 Error in get_total_colleges:", str(e))
+        return jsonify({ "error": "Internal server error" }), 500
+

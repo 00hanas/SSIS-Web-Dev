@@ -194,4 +194,19 @@ def count_by_gender():
     except Exception as e:
         print("Error fetching gender counts:", e)
         return jsonify({"error": "Failed to fetch gender counts"}), 500
+    
+#total students
+@student_bp.route("/total", methods=["GET"])
+@jwt_required()
+def get_total_students():
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM student")
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return jsonify({ "total": total }), 200
+    except Exception as e:
+        print("🔥 Error in get_total_pstudents:", str(e))
+        return jsonify({ "error": "Internal server error" }), 500
 

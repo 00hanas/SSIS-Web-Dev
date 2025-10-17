@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
 import { useEffect, useState } from "react"
-import { fetchColleges } from "@/lib/college-api"
+import { fetchColleges, fetchCollegesTotal } from "@/lib/college-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
 import { EditCollegeDialog } from "./edit-dialog"
@@ -47,7 +47,9 @@ export default function CollegesPage() {
       const data = await fetchColleges(page, 15, search, searchBy, sortBy, sortOrder)
       setColleges(data.colleges)
       setTotalPages(data.pages)
-      setTotalColleges(data.total)
+      const total = await fetchCollegesTotal()
+      setTotalColleges(total)
+
     } catch (error) {
       console.error("Failed to load colleges:", error)
     } finally {

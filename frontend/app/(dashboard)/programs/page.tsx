@@ -15,7 +15,7 @@ import {
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
 import { useEffect, useState } from "react"
 import { fetchColleges } from "@/lib/college-api"
-import { fetchPrograms } from "@/lib/program-api"
+import { fetchPrograms, fetchProgramsTotal } from "@/lib/program-api"
 import { fetchStudents } from "@/lib/student-api"
 import { EditProgramDialog } from "./edit-dialog"
 import { DeleteProgramDialog } from "./delete-dialog"
@@ -47,7 +47,8 @@ export default function ProgramsPage() {
       const data = await fetchPrograms(page, 15, search, searchBy, sortBy, sortOrder)
       setPrograms(data.programs)
       setTotalPages(data.pages)
-      setTotalPrograms(data.total)
+      const total = await fetchProgramsTotal()
+      setTotalPrograms(total)
     } catch (error) {
       console.error("Failed to load programs:", error)
       setPrograms([])
