@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import { SearchSharp as SearchIcon } from '@mui/icons-material'
 import { useEffect, useState } from "react"
-import { fetchStudents } from "@/lib/student-api"
+import { fetchStudents, fetchStudentsTotal } from "@/lib/student-api"
 import { fetchPrograms } from "@/lib/program-api"
 import { fetchColleges } from "@/lib/college-api"
 import { EditStudentDialog } from "./edit-dialog"
@@ -47,7 +47,8 @@ export default function StudentsPage() {
       const data = await fetchStudents(page, 15, search, searchBy, sortBy, sortOrder)
       setStudents(data.students)
       setTotalPages(data.pages)
-      setTotalStudents(data.total)
+      const total = await fetchStudentsTotal()
+      setTotalStudents(total)
     } catch (error) {
       console.error("Failed to load students:", error)
     } finally {

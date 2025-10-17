@@ -141,3 +141,12 @@ export const deleteCollege = async (
 
   return await res.json()
 }
+
+export async function fetchCollegesTotal(): Promise<number> {
+  const res = await fetch("http://127.0.0.1:5000/api/colleges/total", {
+    method: "GET",
+    credentials: "include",
+  })
+  const data = await res.json()
+  return data.total
+}

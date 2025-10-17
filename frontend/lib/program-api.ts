@@ -144,3 +144,12 @@ export const deleteProgram = async (
 
   return await response.json()
 }
+
+export async function fetchProgramsTotal(): Promise<number> {
+  const res = await fetch("http://127.0.0.1:5000/api/programs/total", {
+    method: "GET",
+    credentials: "include",
+  })
+  const data = await res.json()
+  return data.total
+}
