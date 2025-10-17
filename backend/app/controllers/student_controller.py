@@ -93,19 +93,19 @@ def list_students():
 
         if search:
             like = f"%{search}%"
-            if searchBy == 'studentid':
+            if searchBy == 'studentID':
                 where_clauses.append("LOWER(studentid) LIKE %s")
                 params.append(like)
-            elif searchBy == 'firstname':
+            elif searchBy == 'firstName':
                 where_clauses.append("LOWER(firstname) LIKE %s")
                 params.append(like)
-            elif searchBy == 'lastname':
+            elif searchBy == 'lastName':
                 where_clauses.append("LOWER(lastname) LIKE %s")
                 params.append(like)
-            elif searchBy == 'programcode':
+            elif searchBy == 'programCode':
                 where_clauses.append("LOWER(programcode) LIKE %s")
                 params.append(like)
-            elif searchBy == 'yearlevel':
+            elif searchBy == 'yearLevel':
                 where_clauses.append("LOWER(yearlevel) LIKE %s")
                 params.append(like)
             elif searchBy == 'gender':
