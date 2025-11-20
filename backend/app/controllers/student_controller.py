@@ -11,7 +11,8 @@ student_bp = Blueprint("student_bp", __name__, url_prefix="/api/students")
 @jwt_required()
 def create_student():
     current_user_id = get_jwt_identity()
-    form = StudentForm(request.get_json())
+    data = request.get_json()
+    form = StudentForm(data)
 
     if not form.is_valid():
         return jsonify({"error": form.errors[0]}), 400
@@ -19,11 +20,22 @@ def create_student():
     if Student.exists(form.studentID):
         return jsonify({"error": "Student ID already exists"}), 409
 
-    student = Student(form.studentID, form.firstName, form.lastName, form.programCode, form.yearLevel, form.gender)
+    photo_url = data.get("photoUrl", "/student-icon.jpg")
+
+    student = Student(
+        form.studentID,
+        form.firstName,
+        form.lastName,
+        form.programCode,
+        form.yearLevel,
+        form.gender,
+        photo_url  # pass into model
+    )
     student.add()
 
     print(f"[CREATE] User {current_user_id} created student {student.studentID}")
     return jsonify({'message': 'Student created', 'student': student.serialize()}), 201
+
 
 # Read
 @student_bp.route('/<studentID>', methods=['GET'])

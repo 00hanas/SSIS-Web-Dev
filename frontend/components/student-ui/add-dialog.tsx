@@ -26,6 +26,7 @@ import { fetchProgramsForDropdown } from "@/lib/api/program-api"
 import { Student } from "@/components/table/student-columns"
 import { createStudent } from "@/lib/api/student-api"
 import { EntityConfirmationDialog } from "@/components/global/entity-confirmation-dialog"
+import { supabase } from "@/lib/supabase/client"
 
 type AddStudentDialogProps = {
   onStudentAdded?: () => void
@@ -42,6 +43,8 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
   const [gender, setGender] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
   const [isOpen, setIsOpen] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     const loadPrograms = async () => {
@@ -77,14 +80,34 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
     }
 
     try {
+      let uploadedPhotoUrl = "/student-icon.jpg"
+
+      if (photoFile) {
+        const filePath = `${studentID}/${Date.now()}-${photoFile.name}`
+        const { error } = await supabase.storage
+          .from("students-photos")
+          .upload(filePath, photoFile)
+
+        if (error) {
+          console.error("Upload error:", error)
+        } else {
+          const { data } = supabase.storage
+            .from("students-photos")
+            .getPublicUrl(filePath)
+          uploadedPhotoUrl = data.publicUrl
+        }
+      }
+
       const response = await createStudent(
         studentID,
         firstName,
         lastName,
         programCode,
         parseInt(yearLevel),
-        gender
+        gender,
+        uploadedPhotoUrl
       )
+
       setAddedStudent(response.student)
       setId("")
       setFname("")
@@ -216,6 +239,18 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
                   <SelectItem value="Male">Male</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="photo">Photo (optional)</Label>
+              <Input
+                id="photo"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setPhotoFile(file)
+                }}
+              />
             </div>
             {errorMessage && (
               <p className="mt-2 text-sm text-red-600">{errorMessage}</p>

@@ -1,13 +1,14 @@
 from app.database import get_db
 
 class Student():
-    def __init__(self, studentID, firstName, lastName, programCode, yearLevel, gender):
+    def __init__(self, studentID, firstName, lastName, programCode, yearLevel, gender, photoUrl=None):
         self.studentID = studentID
         self.firstName = firstName
         self.lastName = lastName
         self.programCode = programCode
         self.yearLevel = yearLevel
         self.gender = gender
+        self.photoUrl = photoUrl or "/student-icon.jpg"
 
 
     def serialize(self):
@@ -17,14 +18,15 @@ class Student():
             'lastName': self.lastName,
             'programCode': self.programCode or "N/A",
             'yearLevel': self.yearLevel,
-            'gender': self.gender
+            'gender': self.gender,
+            'photoUrl': self.photoUrl
         }
     
     def add(self):
         db = get_db()
         cursor = db.cursor()
-        sql = "INSERT INTO student (studentid, firstname, lastname, programcode, yearlevel, gender) VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute(sql, (self.studentID, self.firstName, self.lastName, self.programCode, self.yearLevel, self.gender))
+        sql = "INSERT INTO student (studentid, firstname, lastname, programcode, yearlevel, gender, photo_url) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(sql, (self.studentID, self.firstName, self.lastName, self.programCode, self.yearLevel, self.gender, self.photoUrl))
         db.commit()
         cursor.close()
 

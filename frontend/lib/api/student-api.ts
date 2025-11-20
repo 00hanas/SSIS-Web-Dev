@@ -24,7 +24,8 @@ export const createStudent = async (
   lastName: string,
   programCode: string,
   yearLevel: number,
-  gender: string
+  gender: string,
+  photoUrl: string
 ) => {
   const res = await fetch(`${BASE_URL}/create`, {
     method: "POST",
@@ -39,6 +40,7 @@ export const createStudent = async (
       programCode,
       yearLevel,
       gender,
+      photoUrl,
     }),
   })
 
