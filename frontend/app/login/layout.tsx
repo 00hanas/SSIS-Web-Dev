@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import "../globals.css"
+import "@/styles/globals.css"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,13 +20,17 @@ export const metadata: Metadata = {
   },
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function LoginLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex items-center justify-center bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground flex min-h-screen items-center justify-center antialiased`}
       >
-        <main className="w-full max-w-4xl p-8 rounded-2xl shadow-lg bg-card flex justify-center">
+        <main className="bg-card flex w-full max-w-4xl justify-center rounded-2xl p-8 shadow-lg">
           {children}
         </main>
       </body>

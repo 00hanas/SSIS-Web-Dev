@@ -1,10 +1,16 @@
 "use client"
 
-import { CardDemographic } from "@/components/cards"
-import { CollegeColumns, College } from "../../table/college-columns"
-import { DataTable } from "../../table/data-table"
-import { AddCollegeDialog } from "./add-dialog"
-import { Input } from "@/components/ui/input"
+import { CardDemographic } from "@/components/dashboard-ui/cards"
+import { CollegeColumns, College } from "@/components/table/college-columns"
+import { DataTable } from "@/components/table/data-table"
+import { AddCollegeDialog } from "@/components/college-ui/add-dialog"
+import { useEffect, useState } from "react"
+import { EditCollegeDialog } from "@/components/college-ui/edit-dialog"
+import { DeleteCollegeDialog } from "@/components/college-ui/delete-dialog"
+import { useAuth } from "@/hooks/useAuth"
+import { PageSkeleton } from "@/components/global/page-skeleton"
+import { SearchInput } from "@/components/college-ui/search-input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -12,166 +18,192 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SearchSharp as SearchIcon } from '@mui/icons-material'
-import { useEffect, useState } from "react"
-import { fetchColleges, fetchCollegesTotal } from "@/lib/college-api"
-import { fetchPrograms } from "@/lib/program-api"
-import { fetchStudents } from "@/lib/student-api"
-import { EditCollegeDialog } from "./edit-dialog"
-import { DeleteCollegeDialog } from "./delete-dialog"
-import { useAuth } from "@/hooks/useAuth"
+import { loadColleges, loadPrograms, loadStudents } from "@/lib/loaders"
+import { SortingState } from "@tanstack/react-table"
 
 export default function CollegesPage() {
   const { authenticated, loading } = useAuth()
-  const [colleges, setColleges] = useState<College[]>([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  const [colleges, setColleges] = useState<College[]>([])
   const [totalColleges, setTotalColleges] = useState(0)
   const [totalPrograms, setTotalPrograms] = useState(0)
   const [totalStudents, setTotalStudents] = useState(0)
-  const [search, setSearch] = useState("")
-  const [searchBy, setSearchBy] = useState<"all" | "collegeCode" | "collegeName">("all")
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null)
   const [collegeToDelete, setCollegeToDelete] = useState<College | null>(null)
-  const [sortBy, setSortBy] = useState<"collegeCode" | "collegeName">("collegeCode")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [searchBy, setSearchBy] = useState<
+    "all" | "collegeCode" | "collegeName"
+  >("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sorting, setSorting] = useState<SortingState>([])
 
   const openEditDialog = (college: College) => {
     setSelectedCollege(college)
   }
 
-  const loadColleges = async () => {
+  useEffect(() => {
+    const fetchCollegesData = async () => {
+      try {
+        const { colleges, total } = await loadColleges()
+        setColleges(colleges)
+        setTotalColleges(total)
+      } catch (error) {
+        console.error("Failed to load colleges:", error)
+      } finally {
+        setInitialLoading(false)
+      }
+    }
+    fetchCollegesData()
+  }, [])
+
+  useEffect(() => {
+    const fetchProgramsData = async () => {
+      try {
+        const { total } = await loadPrograms()
+        setTotalPrograms(total)
+      } catch (error) {
+        console.error("Failed to load programs:", error)
+      }
+    }
+    fetchProgramsData()
+  }, [])
+
+  useEffect(() => {
+    const fetchStudentsData = async () => {
+      try {
+        const { total } = await loadStudents()
+        setTotalStudents(total)
+      } catch (error) {
+        console.error("Failed to load students:", error)
+      }
+    }
+    fetchStudentsData()
+  }, [])
+
+  const refreshColleges = async () => {
     setIsLoading(true)
     try {
-      const data = await fetchColleges(page, 15, search, searchBy, sortBy, sortOrder)
-      setColleges(data.colleges)
-      setTotalPages(data.pages)
-      const total = await fetchCollegesTotal()
+      const { colleges, total } = await loadColleges()
+      setColleges(colleges)
       setTotalColleges(total)
-
     } catch (error) {
-      console.error("Failed to load colleges:", error)
+      console.error("Failed to refresh colleges:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      loadColleges()
-    }, 300)
-    return () => clearTimeout(timeout)
-  }, [search, searchBy, page, sortBy, sortOrder])
+  const filteredColleges = colleges.filter((college) => {
+    const term = searchTerm.toLowerCase()
+    if (!term) return true
 
-  useEffect(() => {
-    const loadPrograms = async () => {
-      try {
-        const data = await fetchPrograms(page, 15, "", "all", "programCode", "asc") 
-        setTotalPrograms(data.total)
-      } catch (error) {
-        console.error("Failed to load programs:", error)
-      }
+    if (searchBy === "collegeCode") {
+      return college.collegeCode.toLowerCase().includes(term)
     }
-    loadPrograms()
-    }, [])
-
-  useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        const data = await fetchStudents(page, 15, "", "all", "lastName", "asc") 
-        setTotalStudents(data.total)
-      } catch (error) {
-        console.error("Failed to load students:", error)
-      }
+    if (searchBy === "collegeName") {
+      return college.collegeName.toLowerCase().includes(term)
     }
-    loadStudents()
-  }, [])
+    return (
+      college.collegeCode.toLowerCase().includes(term) ||
+      college.collegeName.toLowerCase().includes(term)
+    )
+  })
 
-  if (loading) return <div>Loading...</div>
+  if (loading || initialLoading) {
+    return <PageSkeleton />
+  }
   if (!authenticated && !loading) {
-    return <div className="text-center py-6 text-muted-foreground">Redirecting to login...</div>
+    return (
+      <div className="text-muted-foreground py-6 text-center">
+        Redirecting to login...
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-1">
-      <CardDemographic colleges={totalColleges} programs={totalPrograms} students={totalStudents} />
+    <div className="container w-full justify-center px-6">
+      <CardDemographic
+        colleges={totalColleges}
+        programs={totalPrograms}
+        students={totalStudents}
+      />
 
-      <div>
-        <div className="flex items-center justify-between mb-4 mt-6">
-          <div>
-            <h2 className="text-2xl font-bold">Colleges</h2>
-            <p className="text-muted-foreground">
-              Here’s the list of colleges.
-            </p>
-          </div>
-        </div>
+      <div className="container mt-5 mb-2 flex flex-col">
+        <h1 className="mb text-2xl font-semibold tracking-wide">Colleges</h1>
+        <p className="mb tracking-wide">Here's the list of colleges.</p>
+      </div>
+      <div className="mb-4 flex">
+        <div className="flex gap-2">
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            total={filteredColleges.length}
+          />
 
-        <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-                <div className="relative max-w-sm">
-                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                    placeholder="Search colleges..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-8" 
-                />
-                </div>
           <Select
             value={searchBy}
-            onValueChange={(value) => setSearchBy(value as "all" | "collegeCode" | "collegeName")}
-            >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
+            onValueChange={(val) => setSearchBy(val as any)}
+          >
+            <SelectTrigger className="w-[150px] cursor-pointer">
+              <SelectValue placeholder="Search By" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Search by</SelectItem>
-              <SelectItem value="collegeCode">College Code</SelectItem>
-              <SelectItem value="collegeName">College Name</SelectItem>
+              <SelectItem className="cursor-pointer" value="all">
+                Search By
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="collegeCode">
+                College Code
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="collegeName">
+                College Name
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
+        <div className="ml-auto">
+          <AddCollegeDialog onCollegeAdded={refreshColleges} />
+        </div>
+      </div>
 
-        <AddCollegeDialog onCollegeAdded={loadColleges}/>
-          </div>
+      <div className="container">
         {isLoading ? (
-          <div className="text-center py-6 text-muted-foreground">Loading colleges...</div>
+          <Skeleton className="container mx-auto h-[300px] rounded-xl py-10" />
         ) : colleges.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">No data.</div>
+          <div className="text-muted-foreground py-6 text-center">No data.</div>
         ) : (
-          <div className="transition-opacity duration-300 opacity-100">
-            <DataTable 
-              columns={CollegeColumns(openEditDialog, setCollegeToDelete, sortBy, sortOrder, setSortBy, setSortOrder)} 
-              data={colleges}
-              page={page}
-              totalPages={totalPages}
-              setPage={setPage}
-            />
-
-            {selectedCollege && (
-              <EditCollegeDialog
-                college={selectedCollege ?? { collegeCode: "", collegeName: "" }}
-                visible={true}
-                onClose={() => setSelectedCollege(null)}
-                onCollegeUpdated={() => {
-                  loadColleges()
-                  setSelectedCollege(null)
-                }}
+          <div>
+            <div className="mb-2 opacity-100 transition-opacity duration-300">
+              <DataTable
+                columns={CollegeColumns(openEditDialog, setCollegeToDelete)}
+                data={filteredColleges}
+                sorting={sorting}
+                setSorting={setSorting}
               />
-            )}
 
-            {collegeToDelete && (
-              <DeleteCollegeDialog
-                college={collegeToDelete}
-                visible={true}
-                onClose={() => setCollegeToDelete(null)}
-                onCollegeDeleted={() => {
-                  loadColleges()
-                  setCollegeToDelete(null)
-                }}
-              />
-            )}
+              {selectedCollege && (
+                <EditCollegeDialog
+                  college={selectedCollege}
+                  visible={true}
+                  onClose={() => setSelectedCollege(null)}
+                  onCollegeUpdated={() => {
+                    refreshColleges()
+                    setSelectedCollege(null)
+                  }}
+                />
+              )}
+
+              {collegeToDelete && (
+                <DeleteCollegeDialog
+                  college={collegeToDelete}
+                  visible={true}
+                  onClose={() => setCollegeToDelete(null)}
+                  onCollegeDeleted={() => {
+                    refreshColleges()
+                    setCollegeToDelete(null)
+                  }}
+                />
+              )}
+            </div>
           </div>
         )}
       </div>

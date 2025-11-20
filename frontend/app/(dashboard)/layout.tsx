@@ -1,31 +1,12 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "../globals.css";
-import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "@/components/mode-toggle"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Button } from "@/components/ui/button"
-import { VerticalSeparator } from "@/components/separator";
-import { ThemeSelector } from "@/components/ui/theme-selector"
+import "@/styles/globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "SSIS",
-  description: "Student Information System",
-  icons: {
-    icon: "/heart.svg",
-  },
-};
+import { ThemeProvider } from "@/components/global/theme-provider"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/global/app-sidebar"
+import { AppHeader } from "@/components/global/app-header"
+import { geistSans, geistMono } from "@/lib/fonts"
+import { metadata } from "@/lib/metadata"
+export { metadata }
 
 export default function RootLayout({
   children,
@@ -37,35 +18,18 @@ export default function RootLayout({
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider>
             <AppSidebar />
-            <div className="flex flex-col w-full">
-              <header className="flex items-center justify-between p-4 border-b bg-card">
-                <div className="flex items-center gap-2 h-6">
-                  <SidebarTrigger />
-                  <VerticalSeparator />
-                  <h1 className="text-xl font-bold">Student Information System</h1>
-                </div>
-                <div className="flex items-center gap-2">
-                <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-                  <a
-                    href="https://github.com/00hanas/SSIS-Web-Dev"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    className="dark:text-foreground"
-                  >
-                    GitHub
-                  </a>
-                </Button>
-                <ThemeSelector />
-                <ModeToggle />
-              </div>
-              </header>
-              <main className="p-4">
-                {children}
-              </main>
+            <div className="flex w-full flex-col">
+              <AppHeader />
+              <main className="p-4">{children}</main>
             </div>
           </SidebarProvider>
         </ThemeProvider>
@@ -73,4 +37,3 @@ export default function RootLayout({
     </html>
   )
 }
-

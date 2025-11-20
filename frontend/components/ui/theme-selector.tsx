@@ -24,7 +24,9 @@ export function ThemeSelector() {
   }, [])
 
   const applyTheme = (theme: string) => {
-    document.documentElement.classList.remove(...themes.map(t => `theme-${t}`))
+    document.documentElement.classList.remove(
+      ...themes.map((t) => `theme-${t}`)
+    )
     document.documentElement.classList.add(`theme-${theme}`)
     localStorage.setItem(storageKey, theme)
     setSelectedTheme(theme)
@@ -32,12 +34,15 @@ export function ThemeSelector() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">Theme</Button>
+      <DropdownMenuTrigger asChild className="cursor-pointer">
+        <Button variant="ghost" size="sm">
+          Theme
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {themes.map((theme) => (
           <DropdownMenuItem
+            className="cursor-pointer"
             key={theme}
             onClick={() => applyTheme(theme)}
           >

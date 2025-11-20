@@ -71,79 +71,26 @@ def delete_student(studentID):
     print(f"[DELETE] User {current_user_id} deleted student {studentID}")
     return jsonify({'message': f'Student {studentID} deleted'})
 
+#list
 @student_bp.route('', methods=['GET'])
 @jwt_required()
 def list_students():
     try:
         current_user_id = get_jwt_identity()
+        print("Authenticated user:", current_user_id)
+
         db = get_db()
         cursor = db.cursor()
 
-        search = request.args.get('search', '').lower()
-        searchBy = request.args.get('searchBy', 'all')
-        sortBy = request.args.get('sortBy', 'lastName')
-        order = request.args.get('order', 'asc')
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 15))
-        offset = (page - 1) * per_page
-
-        # Build WHERE clause
-        where_clauses = []
-        params = []
-
-        if search:
-            like = f"%{search}%"
-            if searchBy == 'studentID':
-                where_clauses.append("LOWER(studentid) LIKE %s")
-                params.append(like)
-            elif searchBy == 'firstName':
-                where_clauses.append("LOWER(firstname) LIKE %s")
-                params.append(like)
-            elif searchBy == 'lastName':
-                where_clauses.append("LOWER(lastname) LIKE %s")
-                params.append(like)
-            elif searchBy == 'programCode':
-                where_clauses.append("LOWER(programcode) LIKE %s")
-                params.append(like)
-            elif searchBy == 'yearLevel':
-                where_clauses.append("LOWER(yearlevel) LIKE %s")
-                params.append(like)
-            elif searchBy == 'gender':
-                where_clauses.append("LOWER(gender) LIKE %s")
-                params.append(like)
-            elif searchBy == 'all':
-                where_clauses.append("(" +
-                    "LOWER(studentid) LIKE %s OR " +
-                    "LOWER(firstname) LIKE %s OR " +
-                    "LOWER(lastname) LIKE %s OR " +
-                    "LOWER(programcode) LIKE %s OR " +
-                    "CAST(yearlevel AS TEXT) LIKE %s OR " +  # ✅ cast to text
-                    "LOWER(gender) LIKE %s" +
-                ")")
-                params.extend([like] * 6)
-
-        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        sort_sql = f"ORDER BY {sortBy} {'DESC' if order == 'desc' else 'ASC'}"
-
-        cursor.execute(f"SELECT COUNT(*) FROM student {where_sql}", params)
-        total = cursor.fetchone()[0]
-
-        # Fetch paginated results
-        cursor.execute(
-            f"SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student {where_sql} {sort_sql} LIMIT %s OFFSET %s",
-            params + [per_page, offset]
-        )
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student")
         rows = cursor.fetchall()
-        students = [Student(studentid, firstname, lastname, programcode, yearlevel, gender).serialize() for studentid, firstname, lastname, programcode, yearlevel, gender in rows]
-        pages = (total + per_page - 1) // per_page
 
-        print(f"[LIST] User {current_user_id} viewed student list with search='{search}' and sort='{sortBy}:{order}'")
+        students = [Student(studentid, firstname, lastname, programcode, yearlevel, gender).serialize() for studentid, firstname, lastname, programcode, yearlevel, gender in rows]
+
         return jsonify({
-            "students": students,
-            "total": total,
-            "pages": pages,
-            "current_page": page
+            'students': students
         })
+
 
     except Exception as e:
         print("🔥 Error in list_students:", str(e))

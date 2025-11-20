@@ -79,7 +79,7 @@ def delete_college(collegeCode):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-#page display with search and sort
+#list
 @college_bp.route('', methods=['GET'])
 @jwt_required()
 def list_colleges():
@@ -87,60 +87,22 @@ def list_colleges():
         current_user_id = get_jwt_identity()
         print("Authenticated user:", current_user_id)
 
-        search = request.args.get('search', '').lower()
-        searchBy = request.args.get('searchBy', 'all')
-        sortBy = request.args.get('sortBy', 'collegeCode')
-        order = request.args.get('order', 'asc')
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 15))
-        offset = (page - 1) * per_page
-
         db = get_db()
         cursor = db.cursor()
 
-        # Build WHERE clause
-        where_clauses = []
-        params = []
-
-        if search:
-            like = f"%{search}%"
-            if searchBy == 'collegeCode':
-                where_clauses.append("LOWER(collegecode) LIKE %s")
-                params.append(like)
-            elif searchBy == 'collegeName':
-                where_clauses.append("LOWER(collegename) LIKE %s")
-                params.append(like)
-            elif searchBy == 'all':
-                where_clauses.append("(LOWER(collegecode) LIKE %s OR LOWER(collegename) LIKE %s)")
-                params.extend([like, like])
-
-        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        sort_sql = f"ORDER BY {sortBy} {'DESC' if order == 'desc' else 'ASC'}"
-
-        # Count total
-        cursor.execute(f"SELECT COUNT(*) FROM college {where_sql}", params)
-        total = cursor.fetchone()[0]
-
-        # Fetch paginated results
-        cursor.execute(
-            f"SELECT collegecode, collegename FROM college {where_sql} {sort_sql} LIMIT %s OFFSET %s",
-            params + [per_page, offset]
-        )
+        cursor.execute("SELECT collegecode, collegename FROM college")
         rows = cursor.fetchall()
+
         colleges = [College(code, name).serialize() for code, name in rows]
 
-        pages = (total + per_page - 1) // per_page
-
         return jsonify({
-            'colleges': colleges,
-            'total': total,
-            'pages': pages,
-            'current_page': page
+            'colleges': colleges
         })
 
     except Exception as e:
         print("🔥 Error in list_colleges:", str(e))
         return jsonify({"error": "Internal server error"}), 500
+
 
 
 # Dropdown

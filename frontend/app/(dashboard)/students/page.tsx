@@ -1,10 +1,12 @@
 "use client"
 
-import { CardDemographic } from "@/components/cards"
-import { StudentColumns, Student } from "../../table/student-columns"
-import { DataTable } from "../../table/data-table"
-import { AddStudentDialog } from "./add-dialog"
-import { Input } from "@/components/ui/input"
+import { CardDemographic } from "@/components/dashboard-ui/cards"
+import {
+  StudentColumns,
+  Student,
+} from "../../../components/table/student-columns"
+import { DataTable } from "../../../components/table/data-table"
+import { AddStudentDialog } from "../../../components/student-ui/add-dialog"
 import {
   Select,
   SelectContent,
@@ -12,172 +14,235 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SearchSharp as SearchIcon } from '@mui/icons-material'
 import { useEffect, useState } from "react"
-import { fetchStudents, fetchStudentsTotal } from "@/lib/student-api"
-import { fetchPrograms } from "@/lib/program-api"
-import { fetchColleges } from "@/lib/college-api"
-import { EditStudentDialog } from "./edit-dialog"
-import { DeleteStudentDialog } from "./delete-dialog"
+import { EditStudentDialog } from "../../../components/student-ui/edit-dialog"
+import { DeleteStudentDialog } from "../../../components/student-ui/delete-dialog"
 import { useAuth } from "@/hooks/useAuth"
+import { SortingState } from "@tanstack/react-table"
+import { loadColleges, loadPrograms, loadStudents } from "@/lib/loaders"
+import { PageSkeleton } from "@/components/global/page-skeleton"
+import { SearchInput } from "@/components/college-ui/search-input"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StudentsPage() {
   const { authenticated, loading } = useAuth()
-  const [students, setStudents] = useState<Student[]>([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  const [students, setStudents] = useState<Student[]>([])
   const [totalColleges, setTotalColleges] = useState(0)
   const [totalPrograms, setTotalPrograms] = useState(0)
   const [totalStudents, setTotalStudents] = useState(0)
-  const [search, setSearch] = useState("")
-  const [searchBy, setSearchBy] = useState<"all" | "studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("all")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
-  const [sortBy, setSortBy] = useState<"studentID" | "firstName" | "lastName" | "programCode" | "yearLevel" | "gender">("lastName")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [searchBy, setSearchBy] = useState<
+    | "all"
+    | "studentID"
+    | "firstName"
+    | "lastName"
+    | "programCode"
+    | "yearLevel"
+    | "gender"
+  >("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sorting, setSorting] = useState<SortingState>([])
 
   const openEditDialog = (student: Student) => {
     setSelectedStudent(student)
   }
 
-  const loadStudents = async () => {
+  useEffect(() => {
+    const fetchStudentsData = async () => {
+      try {
+        const { students, total } = await loadStudents()
+        setStudents(students)
+        setTotalStudents(total)
+      } catch (error) {
+        console.error("Failed to load students:", error)
+      } finally {
+        setInitialLoading(false)
+      }
+    }
+    fetchStudentsData()
+  }, [])
+
+  useEffect(() => {
+    const fetchCollegesData = async () => {
+      try {
+        const { total } = await loadColleges()
+        setTotalColleges(total)
+      } catch (error) {
+        console.error("Failed to load colleges:", error)
+      }
+    }
+    fetchCollegesData()
+  }, [])
+
+  useEffect(() => {
+    const fetchProgramsData = async () => {
+      try {
+        const { total } = await loadPrograms()
+        setTotalPrograms(total)
+      } catch (error) {
+        console.error("Failed to load programs:", error)
+      }
+    }
+    fetchProgramsData()
+  }, [])
+
+  const refreshStudents = async () => {
     setIsLoading(true)
     try {
-      const data = await fetchStudents(page, 15, search, searchBy, sortBy, sortOrder)
-      setStudents(data.students)
-      setTotalPages(data.pages)
-      const total = await fetchStudentsTotal()
+      const { students, total } = await loadStudents()
+      setStudents(students)
       setTotalStudents(total)
     } catch (error) {
-      console.error("Failed to load students:", error)
+      console.error("Failed to refresh students:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      loadStudents()
-    }, 300)
-    return () => clearTimeout(timeout)
-  }, [search, searchBy, page, sortBy, sortOrder])
+  const filteredStudents = students.filter((student) => {
+    const term = searchTerm.toLowerCase()
+    if (!term) return true
 
-  useEffect(() => {
-    const loadColleges = async () => {
-      try {
-        const data = await fetchColleges(page, 15, "", "all", "collegeCode", "asc") 
-        setTotalColleges(data.total)
-      } catch (error) {
-        console.error("Failed to load colleges:", error)
-      }
+    if (searchBy === "studentID") {
+      return student.studentID.toLowerCase().includes(term)
     }
-    loadColleges()
-  }, [])
-
-  useEffect(() => {
-    const loadPrograms = async () => {
-      try {
-        const data = await fetchPrograms(page, 15, "", "all", "programCode", "asc") 
-        setTotalPrograms(data.total)
-      } catch (error) {
-        console.error("Failed to load programs:", error)
-      }
+    if (searchBy === "firstName") {
+      return student.firstName.toLowerCase().includes(term)
     }
-    loadPrograms()
-  }, [])
+    if (searchBy === "lastName") {
+      return student.lastName.toLowerCase().includes(term)
+    }
+    if (searchBy === "programCode") {
+      return student.programCode.toLowerCase().includes(term)
+    }
+    if (searchBy === "yearLevel") {
+      return student.yearLevel.toString().includes(term)
+    }
+    if (searchBy === "gender") {
+      return student.gender.toLowerCase().includes(term)
+    }
+    return (
+      student.studentID.toLowerCase().includes(term) ||
+      student.firstName.toLowerCase().includes(term) ||
+      student.lastName.toLowerCase().includes(term) ||
+      student.programCode.toLowerCase().includes(term) ||
+      student.yearLevel.toString().includes(term) ||
+      student.gender.toLowerCase().includes(term)
+    )
+  })
 
-  if (loading) return <div>Loading...</div>
+  if (loading || initialLoading) {
+    return <PageSkeleton />
+  }
   if (!authenticated && !loading) {
-    return <div className="text-center py-6 text-muted-foreground">Redirecting to login...</div>
+    return (
+      <div className="text-muted-foreground py-6 text-center">
+        Redirecting to login...
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-1">
-      <CardDemographic colleges={totalColleges} programs={totalPrograms} students={totalStudents} />
+    <div className="container w-full justify-center px-6">
+      <CardDemographic
+        colleges={totalColleges}
+        programs={totalPrograms}
+        students={totalStudents}
+      />
 
-      <div>
-        <div className="flex items-center justify-between mb-4 mt-6">
-          <div>
-            <h2 className="text-2xl font-bold">Students</h2>
-            <p className="text-muted-foreground">
-              Here’s the list of students.
-            </p>
-          </div>
+      <div className="container mt-5 mb-2 flex flex-col">
+        <h1 className="mb text-2xl font-semibold tracking-wide">Students</h1>
+        <p className="mb tracking-wide">Here's the list of students.</p>
+      </div>
+
+      <div className="mb-4 flex">
+        <div className="flex gap-2">
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            total={filteredStudents.length}
+          />
+
+          <Select
+            value={searchBy}
+            onValueChange={(val) => setSearchBy(val as any)}
+          >
+            <SelectTrigger className="w-[150px] cursor-pointer">
+              <SelectValue placeholder="Search By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem className="cursor-pointer" value="all">
+                Search By
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="studentID">
+                Student ID
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="firstName">
+                First Name
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="lastName">
+                Last Name
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="programCode">
+                Program Code
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="yearLevel">
+                Year Level
+              </SelectItem>
+              <SelectItem className="cursor-pointer" value="gender">
+                Gender
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="relative max-w-sm">
-              <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search students..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Select
-              value={searchBy}
-              onValueChange={(value) => setSearchBy(value as typeof searchBy)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Search by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Search by</SelectItem>
-                <SelectItem value="studentID">Student ID</SelectItem>
-                <SelectItem value="firstName">First Name</SelectItem>
-                <SelectItem value="lastName">Last Name</SelectItem>
-                <SelectItem value="programCode">Program Code</SelectItem>
-                <SelectItem value="yearLevel">Year Level</SelectItem>
-                <SelectItem value="gender">Gender</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <AddStudentDialog onStudentAdded={loadStudents} />
+        <div className="ml-auto">
+          <AddStudentDialog onStudentAdded={refreshStudents} />
         </div>
-          {isLoading ? (
-            <div className="text-center py-6 text-muted-foreground">Loading students...</div>
-          ) : students.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">No data.</div>
-          ) : (
-            <div className="transition-opacity duration-300 opacity-100">
-              <DataTable 
-                columns={StudentColumns(openEditDialog, setStudentToDelete, sortBy, sortOrder, setSortBy, setSortOrder)} 
-                data={students}
-                page={page}
-                totalPages={totalPages}
-                setPage={setPage}
+      </div>
+
+      <div className="container">
+        {isLoading ? (
+          <Skeleton className="container mx-auto h-[300px] rounded-xl py-10" />
+        ) : students.length === 0 ? (
+          <div className="text-muted-foreground py-6 text-center">No data.</div>
+        ) : (
+          <div className="mb-2 opacity-100 transition-opacity duration-300">
+            <DataTable
+              columns={StudentColumns(openEditDialog, setStudentToDelete)}
+              data={filteredStudents}
+              sorting={sorting}
+              setSorting={setSorting}
+            />
+
+            {selectedStudent && (
+              <EditStudentDialog
+                student={selectedStudent}
+                visible={true}
+                onClose={() => setSelectedStudent(null)}
+                onStudentUpdated={() => {
+                  refreshStudents()
+                  setSelectedStudent(null)
+                }}
               />
+            )}
 
-              {selectedStudent && (
-                <EditStudentDialog
-                  student={selectedStudent ?? { studentID: "", firstName: "", lastName: "", programCode: "", yearLevel: "", gender: "" }}
-                  visible={true}
-                  onClose={() => setSelectedStudent(null)}
-                  onStudentUpdated={() => {
-                    loadStudents()
-                    setSelectedStudent(null)
-                  }}
-                />
-              )}
-
-              {studentToDelete && (
-                <DeleteStudentDialog
-                  student={studentToDelete}
-                  visible={true}
+            {studentToDelete && (
+              <DeleteStudentDialog
+                student={studentToDelete}
+                visible={true}
                 onClose={() => setStudentToDelete(null)}
-                  onStudentDeleted={() => {
-                    loadStudents()
-                    setStudentToDelete(null)
-                  }}
-                />
-              )}
-            </div>
-          )}
-    </div>
+                onStudentDeleted={() => {
+                  refreshStudents()
+                  setStudentToDelete(null)
+                }}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -80,7 +80,7 @@ def delete_program(programCode):
         return jsonify({"error": str(e)}), 500
 
 
-#page display with search and sort
+#list
 @program_bp.route('', methods=['GET'])
 @jwt_required()
 def list_programs():
@@ -88,61 +88,16 @@ def list_programs():
         current_user_id = get_jwt_identity()
         print("Authenticated user:", current_user_id)
 
-        search = request.args.get('search', '').lower()
-        searchBy = request.args.get('searchBy', 'all')
-        sortBy = request.args.get('sortBy', 'programCode')
-        order = request.args.get('order', 'asc')
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 15))
-        offset = (page - 1) * per_page
-
         db = get_db()
         cursor = db.cursor()
 
-        # Build WHERE clause
-        where_clauses = []
-        params = []
-
-        if search:
-            like = f"%{search}%"
-            if searchBy == 'programCode':
-                where_clauses.append("LOWER(programcode) LIKE %s")
-                params.append(like)
-            elif searchBy == 'programName':
-                where_clauses.append("LOWER(programname) LIKE %s")
-                params.append(like)
-            elif searchBy == 'collegeCode':
-                where_clauses.append("LOWER(collegecode) LIKE %s")
-                params.append(like)
-            elif searchBy == 'all':
-                where_clauses.append("(" +
-                    "LOWER(programcode) LIKE %s OR " +
-                    "LOWER(programname) LIKE %s OR " +
-                    "LOWER(collegecode) LIKE %s" +
-                ")")
-                params.extend([like, like, like])
-
-
-        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        sort_sql = f"ORDER BY {sortBy} {'DESC' if order == 'desc' else 'ASC'}"
-
-        cursor.execute(f"SELECT COUNT(*) FROM program {where_sql}", params)
-        total = cursor.fetchone()[0]
-
-        cursor.execute(
-            f"SELECT programcode, programname, collegecode FROM program {where_sql} {sort_sql} LIMIT %s OFFSET %s",
-            params + [per_page, offset]
-        )
+        cursor.execute("SELECT programcode, programname, collegecode FROM program")
         rows = cursor.fetchall()
+
         programs = [Program(programcode, programname, collegecode).serialize() for programcode, programname, collegecode in rows]
 
-        pages = (total + per_page - 1) // per_page
-
         return jsonify({
-            'programs': programs,
-            'total': total,
-            'pages': pages,
-            'current_page': page
+            'programs': programs
         })
 
     except Exception as e:
