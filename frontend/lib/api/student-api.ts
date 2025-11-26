@@ -78,7 +78,8 @@ export const updateStudent = async (
   lastName: string,
   programCode: string,
   yearLevel: number,
-  gender: string
+  gender: string,
+  photoUrl: string
 ): Promise<Student> => {
   const response = await fetch(`${BASE_URL}/${originalCode}`, {
     method: "PUT",
@@ -93,6 +94,7 @@ export const updateStudent = async (
       programCode,
       yearLevel,
       gender,
+      photoUrl,
     }),
   })
 

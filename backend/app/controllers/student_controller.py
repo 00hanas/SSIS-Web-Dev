@@ -29,7 +29,7 @@ def create_student():
         form.programCode,
         form.yearLevel,
         form.gender,
-        photo_url  # pass into model
+        photo_url  
     )
     student.add()
 
@@ -63,8 +63,10 @@ def update_student(studentID):
 
     if form.studentID.lower() != studentID.lower() and Student.exists(form.studentID):
         return jsonify({"error": "Student ID already exists"}), 409
+    
+    photo_url = form.photoUrl if form.photoUrl else existing_student.photoUrl
 
-    updated_student = Student(form.studentID, form.firstName, form.lastName, form.programCode, form.yearLevel, form.gender)
+    updated_student = Student(form.studentID, form.firstName, form.lastName, form.programCode, form.yearLevel, form.gender, photo_url)
     updated_student.update(studentID)
 
     print(f"[UPDATE] User {current_user_id} updated student {studentID}")

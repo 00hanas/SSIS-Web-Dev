@@ -25,6 +25,8 @@ import { Program } from "../table/program-columns"
 import { Student } from "@/components/table/student-columns"
 import { fetchStudent, updateStudent } from "@/lib/api/student-api"
 import { EntityConfirmationDialog } from "@/components/global/entity-confirmation-dialog"
+import { supabase } from "@/lib/supabase/client"
+import Image from "next/image"
 
 type EditStudentDialogProps = {
   student: {
@@ -34,6 +36,7 @@ type EditStudentDialogProps = {
     programCode: string
     yearLevel: number
     gender: string
+    photoUrl?: string
   }
   visible: boolean
   onClose: () => void
@@ -55,6 +58,8 @@ export function EditStudentDialog({
   const [gender, setGender] = useState(student.gender)
   const [updatedStudent, setUpdatedStudent] = useState<Student | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
+  const [photoUrl, setPhotoUrl] = useState(student.photoUrl)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
 
   useEffect(() => {
     if (visible) {
@@ -64,6 +69,7 @@ export function EditStudentDialog({
       setPcode(student.programCode)
       setYlevel(student.yearLevel)
       setGender(student.gender)
+      setPhotoUrl(student.photoUrl)
       setErrorMessage("")
 
       const loadStudentData = async () => {
@@ -75,11 +81,11 @@ export function EditStudentDialog({
           setPcode(data.programCode)
           setYlevel(data.yearLevel)
           setGender(data.gender)
+          setPhotoUrl(data.photoUrl)
         } catch (error) {
           console.error("Failed to fetch student data:", error)
         }
       }
-
       loadStudentData()
     }
   }, [visible, student.studentID])
@@ -125,13 +131,32 @@ export function EditStudentDialog({
       lastName.trim() === student.lastName.trim() &&
       programCode.trim() === student.programCode.trim() &&
       yearLevel === student.yearLevel &&
-      gender.trim() === student.gender.trim()
+      gender.trim() === student.gender.trim() &&
+      student.photoUrl === photoUrl
     ) {
       setErrorMessage("No changes detected.")
       return
     }
 
     try {
+      let uploadedPhotoUrl = student.photoUrl || "/student-icon.jpg"
+
+      if (photoFile) {
+        const filePath = `${studentID}/${Date.now()}-${photoFile.name}`
+        const { error } = await supabase.storage
+          .from("students-photos")
+          .upload(filePath, photoFile, { upsert: true })
+
+        if (error) {
+          console.error("Upload error:", error)
+        } else {
+          const { data } = supabase.storage
+            .from("students-photos")
+            .getPublicUrl(filePath)
+          uploadedPhotoUrl = data.publicUrl
+          setPhotoUrl(uploadedPhotoUrl)
+        }
+      }
       const response = await updateStudent(
         originalId,
         studentID.trim(),
@@ -139,8 +164,10 @@ export function EditStudentDialog({
         lastName.trim(),
         programCode.trim(),
         yearLevel,
-        gender.trim()
+        gender.trim(),
+        uploadedPhotoUrl
       )
+
       setUpdatedStudent(response)
       setErrorMessage("")
     } catch (error: any) {
@@ -162,6 +189,7 @@ export function EditStudentDialog({
     setPcode("")
     setYlevel(0)
     setGender("")
+    setPhotoUrl("")
     setErrorMessage("")
   }
 
@@ -187,7 +215,15 @@ export function EditStudentDialog({
                 id="studentID"
                 value={studentID}
                 placeholder="e.g. 2023-0001"
-                onChange={(e) => setId(e.target.value)}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "")
+                  if (value.length > 4) {
+                    value = value.slice(0, 4) + "-" + value.slice(4, 8)
+                  }
+
+                  setId(value)
+                }}
+                maxLength={9}
               />
             </div>
             <div className="grid gap-2">
@@ -256,6 +292,34 @@ export function EditStudentDialog({
                   <SelectItem value="Male">Male</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="photo">Photo (optional)</Label>
+              <div className="flex flex-col gap-2">
+                {photoUrl && photoUrl !== "/student-icon.jpg" && (
+                  <Image
+                    src={photoUrl}
+                    alt="Current student photo"
+                    width={75}
+                    height={75}
+                    className="rounded-full"
+                  />
+                )}
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null
+                    setPhotoFile(file)
+
+                    if (file) {
+                      const previewUrl = URL.createObjectURL(file)
+                      setPhotoUrl(previewUrl)
+                    }
+                  }}
+                />
+              </div>
             </div>
             {errorMessage && (
               <div className="text-sm text-red-600">{errorMessage}</div>

@@ -23,6 +23,7 @@ import { loadColleges, loadPrograms, loadStudents } from "@/lib/loaders"
 import { PageSkeleton } from "@/components/global/page-skeleton"
 import { SearchInput } from "@/components/college-ui/search-input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ViewStudentDialog } from "@/components/student-ui/view-dialog"
 
 export default function StudentsPage() {
   const { authenticated, loading } = useAuth()
@@ -32,6 +33,7 @@ export default function StudentsPage() {
   const [totalColleges, setTotalColleges] = useState(0)
   const [totalPrograms, setTotalPrograms] = useState(0)
   const [totalStudents, setTotalStudents] = useState(0)
+  const [viewSelectedStudent, setViewStudent] = useState<Student | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
   const [searchBy, setSearchBy] = useState<
@@ -48,6 +50,10 @@ export default function StudentsPage() {
 
   const openEditDialog = (student: Student) => {
     setSelectedStudent(student)
+  }
+
+  const openViewDialog = (student: Student) => {
+    setViewStudent(student)
   }
 
   useEffect(() => {
@@ -211,11 +217,23 @@ export default function StudentsPage() {
         ) : (
           <div className="mb-2 opacity-100 transition-opacity duration-300">
             <DataTable
-              columns={StudentColumns(openEditDialog, setStudentToDelete)}
+              columns={StudentColumns(
+                openViewDialog,
+                openEditDialog,
+                setStudentToDelete
+              )}
               data={filteredStudents}
               sorting={sorting}
               setSorting={setSorting}
             />
+
+            {viewSelectedStudent && (
+              <ViewStudentDialog
+                student={viewSelectedStudent}
+                visible={true}
+                onClose={() => setViewStudent(null)}
+              />
+            )}
 
             {selectedStudent && (
               <EditStudentDialog

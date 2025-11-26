@@ -8,7 +8,7 @@ class Student():
         self.programCode = programCode
         self.yearLevel = yearLevel
         self.gender = gender
-        self.photoUrl = photoUrl or "/student-icon.jpg"
+        self.photoUrl = photoUrl
 
 
     def serialize(self):
@@ -19,7 +19,7 @@ class Student():
             'programCode': self.programCode or "N/A",
             'yearLevel': self.yearLevel,
             'gender': self.gender,
-            'photoUrl': self.photoUrl
+            'photoUrl': self.photoUrl or "/student-icon.jpg"
         }
     
     def add(self):
@@ -33,8 +33,8 @@ class Student():
     def update(self, originalcode):
         db = get_db()
         cursor = db.cursor()
-        sql = "UPDATE student SET studentid = %s, firstname = %s, lastname = %s, programcode = %s, yearlevel = %s, gender = %s WHERE studentid = %s"
-        cursor.execute(sql, (self.studentID, self.firstName, self.lastName, self.programCode, self.yearLevel, self.gender, originalcode))
+        sql = "UPDATE student SET studentid = %s, firstname = %s, lastname = %s, programcode = %s, yearlevel = %s, gender = %s, photo_url = %s WHERE studentid = %s"
+        cursor.execute(sql, (self.studentID, self.firstName, self.lastName, self.programCode, self.yearLevel, self.gender, self.photoUrl, originalcode))
         db.commit()
         cursor.close()
 
@@ -49,7 +49,7 @@ class Student():
     def get(cls, studentID):
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student WHERE studentid = %s", (studentID,))
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender, photo_url FROM student WHERE studentid = %s", (studentID,))
         row = cursor.fetchone()
         cursor.close()
         return cls(*row) if row else None
@@ -58,7 +58,7 @@ class Student():
     def all(cls):
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student ORDER BY lastname")
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender, photo_url FROM student ORDER BY lastname")
         rows = cursor.fetchall()
         cursor.close()
         return [cls(*row) for row in rows]
@@ -76,7 +76,7 @@ class Student():
     def students_by_prog(cls, programCode):
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student WHERE programcode = %s ORDER BY lastname", (programCode,))
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender, photo_url FROM student WHERE programcode = %s ORDER BY lastname", (programCode,))
         rows = cursor.fetchall()
         cursor.close()
         return [cls(*row) for row in rows]

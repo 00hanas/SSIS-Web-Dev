@@ -10,20 +10,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SwapVertSharp as SortIcon } from "@mui/icons-material"
 import { EditNoteSharp as EditIcon } from "@mui/icons-material"
 import { DeleteOutlineSharp as DeleteIcon } from "@mui/icons-material"
+import { PersonPin as PersonIcon } from "@mui/icons-material"
 
 export type Student = {
   studentID: string
   firstName: string
   lastName: string
   programCode: string
-  yearLevel: 1 | 2 | 3 | 4 | 5
+  yearLevel: number
   gender: "Female" | "Male"
+  photoUrl?: string
 }
 
 export const StudentColumns = (
+  setViewDialog: (student: Student) => void,
   setEditDialog: (student: Student) => void,
   setDeleteDialog: (student: Student) => void
 ): ColumnDef<Student>[] => [
@@ -140,10 +142,19 @@ export const StudentColumns = (
               <Button
                 variant="ghost"
                 className="flex w-full cursor-pointer justify-between"
+                onClick={() => setViewDialog(student)}
+              >
+                <span>View</span>
+                <PersonIcon className="text-muted-foreground h-4 w-4 justify-end" />
+              </Button>
+              <DropdownMenuSeparator className="mr-2 ml-2" />
+              <Button
+                variant="ghost"
+                className="flex w-full cursor-pointer justify-between"
                 onClick={() => setEditDialog(student)}
               >
                 <span>Edit</span>
-                <EditIcon className="text-muted-foreground h-4 w-4" />
+                <EditIcon className="text-muted-foreground ml-auto h-4 w-4 justify-end" />
               </Button>
               <Button
                 variant="ghost"
@@ -151,7 +162,7 @@ export const StudentColumns = (
                 onClick={() => setDeleteDialog(student)}
               >
                 <span>Delete</span>
-                <DeleteIcon className="text-muted-foreground h-4 w-4" />
+                <DeleteIcon className="text-muted-foreground h-4 w-4 justify-end" />
               </Button>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -6,6 +6,7 @@ class StudentForm:
         self.programCode = data.get("programCode", "").strip()
         self.yearLevel = data.get("yearLevel")
         self.gender = data.get("gender", "").strip()
+        self.photoUrl = data.get("photoUrl")
         self.errors = []
 
     def is_valid(self):
@@ -28,5 +29,6 @@ class StudentForm:
             "lastName": self.lastName,
             "programCode": self.programCode,
             "yearLevel": self.yearLevel,
-            "gender": self.gender
+            "gender": self.gender,
+            "photoUrl": self.photoUrl
         }

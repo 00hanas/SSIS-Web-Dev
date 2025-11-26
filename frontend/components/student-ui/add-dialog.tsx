@@ -27,6 +27,7 @@ import { Student } from "@/components/table/student-columns"
 import { createStudent } from "@/lib/api/student-api"
 import { EntityConfirmationDialog } from "@/components/global/entity-confirmation-dialog"
 import { supabase } from "@/lib/supabase/client"
+import Image from "next/image"
 
 type AddStudentDialogProps = {
   onStudentAdded?: () => void
@@ -136,6 +137,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
     setPcode("")
     setYlevel("")
     setGender("")
+    setPhotoUrl("")
     setErrorMessage("")
   }
 
@@ -172,7 +174,15 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
                 id="studentID"
                 placeholder="e.g. 2023-0001"
                 value={studentID}
-                onChange={(e) => setId(e.target.value)}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "")
+                  if (value.length > 4) {
+                    value = value.slice(0, 4) + "-" + value.slice(4, 8)
+                  }
+
+                  setId(value)
+                }}
+                maxLength={9}
               />
             </div>
             <div className="grid gap-2">
@@ -242,6 +252,17 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="photo">Photo (optional)</Label>
+              {photoUrl && (
+                <div className="mt-2">
+                  <Image
+                    src={photoUrl}
+                    alt="Preview"
+                    width={75}
+                    height={75}
+                    className="rounded-full object-cover"
+                  />
+                </div>
+              )}
               <Input
                 id="photo"
                 type="file"
@@ -249,6 +270,11 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null
                   setPhotoFile(file)
+
+                  if (file) {
+                    const previewUrl = URL.createObjectURL(file)
+                    setPhotoUrl(previewUrl)
+                  }
                 }}
               />
             </div>
