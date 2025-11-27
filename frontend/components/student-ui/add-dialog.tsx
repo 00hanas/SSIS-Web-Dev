@@ -110,13 +110,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       )
 
       setAddedStudent(response.student)
-      setId("")
-      setFname("")
-      setLname("")
-      setPcode("")
-      setYlevel("")
-      setGender("")
-      setErrorMessage("")
+      resetForm()
       setIsOpen(false)
       onStudentAdded?.()
     } catch (error: unknown) {
@@ -141,7 +135,8 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
     setPcode("")
     setYlevel("")
     setGender("")
-    setPhotoUrl("")
+    setPhotoFile(null)
+    setPhotoUrl(null)
     setErrorMessage("")
   }
 
@@ -263,7 +258,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
                     alt="Preview"
                     width={75}
                     height={75}
-                    className="rounded-full object-cover"
+                    className="!h-15 !w-15 rounded-full object-cover"
                   />
                 </div>
               )}
