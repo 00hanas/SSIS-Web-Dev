@@ -119,11 +119,15 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       setErrorMessage("")
       setIsOpen(false)
       onStudentAdded?.()
-    } catch (error: any) {
-      if (error.message === "Student ID already exists") {
-        setErrorMessage("Student ID already exists. Please use a different ID.")
-      } else if (error.message === "Missing required fields") {
-        setErrorMessage("Please fill in all fields.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Student ID already exists") {
+          setErrorMessage(`Student ID (${studentID}) is already taken.`)
+        } else if (error.message === "Missing required fields") {
+          setErrorMessage("Please fill in all required fields.")
+        } else {
+          setErrorMessage(error.message || "Something went wrong. Try again.")
+        }
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }

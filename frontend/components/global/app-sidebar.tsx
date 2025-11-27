@@ -39,6 +39,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useAuth } from "@/hooks/useAuth"
+import Image from "next/image"
 
 const items = [
   { title: "Dashboard", href: "/dashboard", icon: DashboardIcon },
@@ -101,10 +102,12 @@ export function AppSidebar() {
                   }`}
                 >
                   <div className="h-10 w-10 flex-shrink-0">
-                    <img
+                    <Image
                       src="/icon.jpg"
                       alt="Profile"
-                      className="h-10 w-10 rounded-full object-cover"
+                      width={100}
+                      height={100}
+                      className="!h-10 !w-10 rounded-full object-cover"
                     />
                   </div>
                   {open && (
@@ -133,10 +136,12 @@ export function AppSidebar() {
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <div className="h-10 w-10 flex-shrink-0">
-                    <img
+                    <Image
                       src="/icon.jpg"
                       alt="Profile"
-                      className="h-10 w-10 rounded-full object-cover"
+                      width={100}
+                      height={100}
+                      className="!h-10 !w-10 rounded-full object-cover"
                     />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">

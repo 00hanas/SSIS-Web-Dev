@@ -43,11 +43,15 @@ export function AddCollegeDialog({ onCollegeAdded }: AddCollegeDialogProps) {
       setErrorMessage("")
       setIsOpen(false)
       onCollegeAdded?.()
-    } catch (error: any) {
-      if (error.message === "College code already exists") {
-        setErrorMessage(`College Code (${collegeCode}) is already taken.`)
-      } else if (error.message === "Missing required fields") {
-        setErrorMessage("Please fill in both College Code and College Name.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "College code already exists") {
+          setErrorMessage(`College Code (${collegeCode}) is already taken.`)
+        } else if (error.message === "Missing required fields") {
+          setErrorMessage("Please fill in both College Code and College Name.")
+        } else {
+          setErrorMessage(error.message || "Something went wrong. Try again.")
+        }
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }

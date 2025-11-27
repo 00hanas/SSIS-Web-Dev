@@ -130,7 +130,7 @@ export default function CollegesPage() {
 
       <div className="container mt-5 mb-2 flex flex-col">
         <h1 className="mb text-2xl font-semibold tracking-wide">Colleges</h1>
-        <p className="mb tracking-wide">Here's the list of colleges.</p>
+        <p className="mb tracking-wide">Here&apos;s the list of colleges.</p>
       </div>
       <div className="mb-4 flex">
         <div className="flex gap-2">
@@ -142,7 +142,9 @@ export default function CollegesPage() {
 
           <Select
             value={searchBy}
-            onValueChange={(val) => setSearchBy(val as any)}
+            onValueChange={(val) =>
+              setSearchBy(val as "all" | "collegeCode" | "collegeName")
+            }
           >
             <SelectTrigger className="w-[150px] cursor-pointer">
               <SelectValue placeholder="Search By" />

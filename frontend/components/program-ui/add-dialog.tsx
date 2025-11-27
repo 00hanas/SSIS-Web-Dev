@@ -71,11 +71,15 @@ export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
       setErrorMessage("")
       setIsOpen(false)
       onProgramAdded?.()
-    } catch (error: any) {
-      if (error.message === "Program code already exists") {
-        setErrorMessage(`Program Code (${programCode}) is already taken.`)
-      } else if (error.message === "Missing required fields") {
-        setErrorMessage("Please fill in all fields.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Program code already exists") {
+          setErrorMessage(`Program Code (${programCode}) is already taken.`)
+        } else if (error.message === "Missing required fields") {
+          setErrorMessage("Please fill in all required fields.")
+        } else {
+          setErrorMessage(error.message || "Something went wrong. Try again.")
+        }
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }

@@ -91,7 +91,16 @@ export function EditStudentDialog({
       }
       loadStudentData()
     }
-  }, [visible, student.studentID])
+  }, [
+    visible,
+    student.studentID,
+    student.firstName,
+    student.lastName,
+    student.programCode,
+    student.yearLevel,
+    student.gender,
+    student.photoUrl,
+  ])
 
   useEffect(() => {
     const loadPrograms = async () => {
@@ -171,12 +180,15 @@ export function EditStudentDialog({
 
       setUpdatedStudent(response)
       setErrorMessage("")
-    } catch (error: any) {
-      const msg = error.message
-      if (msg === "Student ID already exists") {
-        setErrorMessage(`Student ID (${studentID}) is already taken.`)
-      } else if (msg === "Missing required fields") {
-        setErrorMessage("Please fill in all fields.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Student ID already exists") {
+          setErrorMessage(`Student ID (${studentID}) is already taken.`)
+        } else if (error.message === "Missing required fields") {
+          setErrorMessage("Please fill in all required fields.")
+        } else {
+          setErrorMessage(error.message || "Something went wrong. Try again.")
+        }
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }

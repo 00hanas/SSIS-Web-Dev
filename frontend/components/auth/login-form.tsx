@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { loginUser } from "@/lib/api/login-api"
 import { SignUpDialog } from "@/components/auth/signup-form"
+import Image from "next/image"
 
 export default function LoginForm({
   className,
@@ -19,27 +20,37 @@ export default function LoginForm({
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [showSignUp, setShowSignUp] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setLoading(true)
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address.")
+      setLoading(false)
       return
     }
     try {
       await loginUser(email, password)
       router.push("/dashboard")
-    } catch (err: any) {
-      if (err.status === 404) {
-        setError("This email is not registered.")
-      } else if (err.status === 401) {
-        setError("Incorrect password. Please try again.")
-      } else {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
         setError(err.message || "Something went wrong. Please try again.")
+      } else if (typeof err === "object" && err && "status" in err) {
+        const status = (err as { status?: number }).status
+        if (status === 404) {
+          setError("This email is not registered.")
+        } else if (status === 401) {
+          setError("Incorrect password. Please try again.")
+        }
+      } else {
+        setError("Something went wrong. Please try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -83,8 +94,8 @@ export default function LoginForm({
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Redirecting..." : "Login"}
               </Button>
               <div className="text-center text-sm">
                 Don&apos;t have an account?{" "}
@@ -99,9 +110,11 @@ export default function LoginForm({
             </div>
           </form>
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/login-photo.jpg"
               alt="Image"
+              width={140}
+              height={140}
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.8]"
             />
           </div>

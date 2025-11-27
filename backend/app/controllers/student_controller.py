@@ -96,10 +96,10 @@ def list_students():
         db = get_db()
         cursor = db.cursor()
 
-        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student")
+        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender, photo_url FROM student")
         rows = cursor.fetchall()
 
-        students = [Student(studentid, firstname, lastname, programcode, yearlevel, gender).serialize() for studentid, firstname, lastname, programcode, yearlevel, gender in rows]
+        students = [Student(studentid, firstname, lastname, programcode, yearlevel, gender, photoUrl).serialize() for studentid, firstname, lastname, programcode, yearlevel, gender, photoUrl in rows]
 
         return jsonify({
             'students': students

@@ -54,11 +54,21 @@ export function SignUpDialog({ open, onClose, onSignedUp }: SignUpDialogProps) {
       setShowSuccess(true)
       onSignedUp?.()
       onClose()
-    } catch (err: any) {
-      if (err.status === 409) {
-        setError("That email or username is already taken.")
-      } else {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
         setError(err.message || "Something went wrong. Please try again.")
+      } else if (typeof err === "object" && err && "status" in err) {
+        const status = (err as { status?: number }).status
+        if (status === 400) {
+          setError("Please fill in all required fields correctly.")
+          return
+        } else if (status === 409) {
+          setError("That email or username is already taken.")
+        } else {
+          setError("Something went wrong. Please try again.")
+        }
+      } else {
+        setError("Something went wrong. Please try again.")
       }
     }
   }

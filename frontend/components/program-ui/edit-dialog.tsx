@@ -68,7 +68,7 @@ export function EditProgramDialog({
       }
       loadProgramData()
     }
-  }, [visible, program.programCode])
+  }, [visible, program.programCode, program.programName, program.collegeCode])
 
   useEffect(() => {
     const loadColleges = async () => {
@@ -108,11 +108,15 @@ export function EditProgramDialog({
       )
       setUpdatedProgram(response)
       setErrorMessage("")
-    } catch (error: any) {
-      if (error.message === "Program code already exists") {
-        setErrorMessage(`Program Code (${programCode}) is already taken.`)
-      } else if (error.message === "Missing required fields") {
-        setErrorMessage("Please fill in all fields.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Program code already exists") {
+          setErrorMessage(`Program Code (${programCode}) is already taken.`)
+        } else if (error.message === "Missing required fields") {
+          setErrorMessage("Please fill in all required fields.")
+        } else {
+          setErrorMessage(error.message || "Something went wrong. Try again.")
+        }
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
@@ -138,7 +142,7 @@ export function EditProgramDialog({
           <DialogHeader>
             <DialogTitle>Edit Program</DialogTitle>
             <DialogDescription>
-              Update the fields below to modify this program."
+              Update the fields below to modify this program.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

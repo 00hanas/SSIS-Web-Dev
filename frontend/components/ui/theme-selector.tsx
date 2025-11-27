@@ -36,14 +36,18 @@ export function ThemeSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="cursor-pointer">
         <Button variant="ghost" size="sm">
-          Theme
+          Theme:{" "}
+          {selectedTheme
+            ? selectedTheme.charAt(0).toUpperCase() + selectedTheme.slice(1)
+            : "Default"}
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="end">
         {themes.map((theme) => (
           <DropdownMenuItem
-            className="cursor-pointer"
             key={theme}
+            className={`cursor-pointer ${selectedTheme === theme ? "font-bold" : ""}`}
             onClick={() => applyTheme(theme)}
           >
             {theme.charAt(0).toUpperCase() + theme.slice(1)}

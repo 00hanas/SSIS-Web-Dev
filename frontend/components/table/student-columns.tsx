@@ -13,6 +13,7 @@ import {
 import { EditNoteSharp as EditIcon } from "@mui/icons-material"
 import { DeleteOutlineSharp as DeleteIcon } from "@mui/icons-material"
 import { PersonPin as PersonIcon } from "@mui/icons-material"
+import Image from "next/image"
 
 export type Student = {
   studentID: string
@@ -29,6 +30,30 @@ export const StudentColumns = (
   setEditDialog: (student: Student) => void,
   setDeleteDialog: (student: Student) => void
 ): ColumnDef<Student>[] => [
+  {
+    accessorKey: "photoUrl",
+    size: 60,
+    header: "Photo",
+    cell: ({ row }) => {
+      console.log("Row data:", row.original) // check what photoUrl really is
+      const photoUrl = row.original.photoUrl
+      const name = `${row.original.firstName} ${row.original.lastName}`
+
+      return photoUrl ? (
+        <Image
+          src={photoUrl}
+          alt={name}
+          width={40}
+          height={40}
+          className="!h-10 !w-10 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-xs">
+          N/A
+        </div>
+      )
+    },
+  },
   {
     accessorKey: "studentID",
     size: 150,

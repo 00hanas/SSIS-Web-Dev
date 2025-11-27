@@ -134,7 +134,7 @@ export default function ProgramsPage() {
 
       <div className="container mt-5 mb-2 flex flex-col">
         <h1 className="mb text-2xl font-semibold tracking-wide">Programs</h1>
-        <p className="mb tracking-wide">Here's the list of programs.</p>
+        <p className="mb tracking-wide">Here&apos;s the list of programs.</p>
       </div>
 
       <div className="mb-4 flex">
@@ -147,7 +147,11 @@ export default function ProgramsPage() {
 
           <Select
             value={searchBy}
-            onValueChange={(val) => setSearchBy(val as any)}
+            onValueChange={(val) =>
+              setSearchBy(
+                val as "all" | "programCode" | "programName" | "collegeCode"
+              )
+            }
           >
             <SelectTrigger className="w-[150px] cursor-pointer">
               <SelectValue placeholder="Search By" />
