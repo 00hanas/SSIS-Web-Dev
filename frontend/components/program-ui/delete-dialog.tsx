@@ -27,13 +27,17 @@ export function DeleteProgramDialog({
   onProgramDeleted,
 }: DeleteProgramDialogProps) {
   const [deletedProgram, setDeletedProgram] = useState<Program | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleDeleteProgram = async () => {
+    setLoading(true)
     try {
       await deleteProgram(program.programCode)
       setDeletedProgram(program)
     } catch (error) {
       console.error("Failed to delete program:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -64,9 +68,11 @@ export function DeleteProgramDialog({
             <Button
               className="cursor-pointer"
               variant="destructive"
+              type="submit"
+              disabled={loading}
               onClick={handleDeleteProgram}
             >
-              Delete
+              {loading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

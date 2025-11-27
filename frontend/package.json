@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "dev": "next dev -H 127.0.0.1 -p 3000",
+    "lint": "eslint",
     "copy:clean": "if exist ..\\backend\\app\\static\\_next rmdir /S /Q ..\\backend\\app\\static\\_next && if exist ..\\backend\\app\\static\\assets rmdir /S /Q ..\\backend\\app\\static\\assets && if exist ..\\backend\\app\\templates rmdir /S /Q ..\\backend\\app\\templates && mkdir ..\\backend\\app\\templates",
     "copy:html": "xcopy /E /I /Y out \"..\\backend\\app\\templates\"",
     "copy:next": "mkdir ..\\backend\\app\\static\\_next && xcopy /E /I /Y out\\_next \"..\\backend\\app\\static\\_next\"",

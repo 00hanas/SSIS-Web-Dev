@@ -27,13 +27,18 @@ export function DeleteStudentDialog({
   onStudentDeleted,
 }: DeleteStudentDialogProps) {
   const [deletedStudent, setDeletedStudent] = useState<Student | null>(null)
+  const [loading, setLoading] = useState(false)
+
   const handleDeleteStudent = async () => {
+    setLoading(true)
     try {
       await deleteStudentFolder(student.studentID)
       await deleteStudent(student.studentID)
       setDeletedStudent(student)
     } catch (error) {
       console.error("Failed to delete student:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -67,9 +72,11 @@ export function DeleteStudentDialog({
             <Button
               className="cursor-pointer"
               variant="destructive"
+              type="submit"
+              disabled={loading}
               onClick={handleDeleteStudent}
             >
-              Delete
+              {loading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
