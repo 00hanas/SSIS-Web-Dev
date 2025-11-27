@@ -76,7 +76,7 @@ def delete_program(programCode):
 
 
 #list
-@program_bp.route('', methods=['GET'])
+@program_bp.route('/list', methods=['GET'])
 @jwt_required()
 def list_programs():
     try:
@@ -88,6 +88,44 @@ def list_programs():
     except Exception as e:
         print("🔥 Error in list_programs:", str(e))
         return jsonify({"error": "Internal server error"}), 500
+    
+#page display with search, sort, pagination
+@program_bp.route('', methods=['GET'])
+@jwt_required()
+def list_programs_filtered():
+    try:
+        current_user_id = get_jwt_identity()
+        print("Authenticated user:", current_user_id)
+
+        search = request.args.get('search', '').lower()
+        search_by = request.args.get('searchBy', 'all')
+        sort_by = request.args.get('sortBy', 'programCode')
+        sort_order = request.args.get('order', 'asc')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 15))
+
+        programs, total = Program.query(
+            search=search,
+            search_by=search_by,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=per_page
+        )
+
+        pages = (total + per_page - 1) // per_page
+
+        return jsonify({
+            'programs': [p.serialize() for p in programs],
+            'total': total,
+            'pages': pages,
+            'current_page': page
+        }), 200
+    
+    except Exception as e:
+        print("🔥 Error in list_programs:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
+
 
 #dropdown
 @program_bp.route('/dropdown', methods=['GET'])

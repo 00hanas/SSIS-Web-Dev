@@ -9,8 +9,6 @@ import {
   getSortedRowModel,
   useReactTable,
   SortingState,
-  getPaginationRowModel,
-  PaginationState,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -20,49 +18,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useState } from "react"
-
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  sorting: SortingState
-  setSorting: React.Dispatch<React.SetStateAction<SortingState>>
+  page: number
+  totalPages: number
+  setPage: (page: number) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  sorting,
-  setSorting,
+  page,
+  totalPages,
+  setPage,
 }: DataTableProps<TData, TValue>) {
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  const [sorting, setSorting] = React.useState<SortingState>([])
 
   const table = useReactTable({
     data,
     columns,
+    getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
     state: {
       sorting,
-      pagination,
     },
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-
-    columnResizeMode: "onChange",
-    enableColumnResizing: true,
   })
 
   return (
     <div>
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden rounded-md border shadow-md">
         <Table className="w-full table-fixed">
-          <TableHeader className="bg-gradient-to-b from-[var(--header-gradient-from)] to-[var(--header-gradient-to)]">
+          <TableHeader className="bg-accent/20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -106,28 +94,25 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end gap-2 py-4">
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <span className="text-muted-foreground text-sm">
+          Page {page} of {totalPages}
+        </span>
         <Button
-          className="text-foreground border-primary cursor-pointer border bg-transparent hover:bg-transparent"
           variant="default"
           size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
+          onClick={() => setPage(page - 1)}
+          disabled={page <= 1}
+          className="cursor-pointer"
         >
           Previous
         </Button>
-
-        <span className="text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
-        </span>
-
         <Button
-          className="cursor-pointer"
           variant="default"
           size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
+          onClick={() => setPage(page + 1)}
+          disabled={page >= totalPages}
+          className="cursor-pointer"
         >
           Next
         </Button>

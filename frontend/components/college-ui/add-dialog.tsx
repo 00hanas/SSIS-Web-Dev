@@ -28,10 +28,13 @@ export function AddCollegeDialog({ onCollegeAdded }: AddCollegeDialogProps) {
   const [collegeName, setName] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
   const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleAddCollege = async () => {
+  const handleAddCollege = async (): Promise<void> => {
+    setLoading(true)
     if (!collegeCode.trim() || !collegeName.trim()) {
       setErrorMessage("Please fill in both fields.")
+      setLoading(false)
       return
     }
 
@@ -55,6 +58,8 @@ export function AddCollegeDialog({ onCollegeAdded }: AddCollegeDialogProps) {
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -129,10 +134,11 @@ export function AddCollegeDialog({ onCollegeAdded }: AddCollegeDialogProps) {
             </DialogClose>
             <Button
               className="cursor-pointer"
-              type="button"
+              type="submit"
               onClick={handleAddCollege}
+              disabled={loading}
             >
-              Save
+              {loading ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

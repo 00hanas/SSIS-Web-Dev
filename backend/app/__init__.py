@@ -1,10 +1,10 @@
 import os
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template
 from flask_cors import CORS
+from flask import send_from_directory
 from flask_jwt_extended import JWTManager
 from app.extensions import db, migrate
 from app.routes import register_routes
-from config import Config
 from dotenv import load_dotenv
 
 
@@ -30,24 +30,25 @@ def create_app():
 
     register_routes(app)
 
-    @app.route("/")
-    def root():
-        return redirect("/login")
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_frontend(path):
+        templates_dir = os.path.join(BASE_DIR, "templates")
+        static_dir = os.path.join(BASE_DIR, "static")
 
-    @app.route("/<path:page>")
-    def serve_page(page):
+        # Serve actual static files (_next, images)
+        static_path = os.path.join(static_dir, path)
+        if path != "" and os.path.exists(static_path):
+            return send_from_directory(static_dir, path)
 
-        # Serve static files (images, js, css)
-        if "." in page:
-            return app.send_static_file(page)
+        # Serve HTML files from templates
+        html_file = os.path.join(templates_dir, f"{path}.html")
+        if path != "" and os.path.exists(html_file):
+            return render_template(f"{path}.html")
 
-        html_file = f"{page}.html"
-        file_path = os.path.join(app.template_folder, html_file)
+        # Otherwise return index.html
+        return render_template("index.html")
 
-        if os.path.exists(file_path):
-            return render_template(html_file)
-
-        return render_template("404.html"), 404
 
     return app
 

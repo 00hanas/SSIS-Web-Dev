@@ -73,22 +73,60 @@ def delete_college(collegeCode):
         return jsonify({'message': f'College {collegeCode} deleted and programs updated.'}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
+    
 #list
+@college_bp.route('/list', methods=['GET']) 
+@jwt_required() 
+def list_colleges(): 
+    try: 
+        current_user_id = get_jwt_identity() 
+        print("Authenticated user:", current_user_id) 
+        colleges = [c.serialize() for c in College.all()]
+        return jsonify({'colleges': colleges}), 200
+
+    except Exception as e: 
+        print("🔥 Error in list_colleges:", str(e)) 
+        return jsonify({"error": "Internal server error"}), 500
+
+#page display with search, sort, pagination
 @college_bp.route('', methods=['GET'])
 @jwt_required()
-def list_colleges():
+def list_colleges_filtered():
     try:
         current_user_id = get_jwt_identity()
         print("Authenticated user:", current_user_id)
 
-        colleges = [c.serialize() for c in College.all()]
-        return jsonify({'colleges': colleges}), 200
+        # Parse query params
+        search = request.args.get('search', '').lower()
+        search_by = request.args.get('searchBy', 'all')
+        sort_by = request.args.get('sortBy', 'collegeCode')
+        sort_order = request.args.get('order', 'asc')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 15))
+
+        # Delegate to model
+        colleges, total = College.query(
+            search=search,
+            search_by=search_by,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=per_page
+        )
+
+        pages = (total + per_page - 1) // per_page
+
+        return jsonify({
+            'colleges': [c.serialize() for c in colleges],
+            'total': total,
+            'pages': pages,
+            'current_page': page
+        }), 200
 
     except Exception as e:
         print("🔥 Error in list_colleges:", str(e))
         return jsonify({"error": "Internal server error"}), 500
+
 
 
 # Dropdown

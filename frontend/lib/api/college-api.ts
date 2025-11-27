@@ -5,7 +5,7 @@ const BASE_URL = "http://127.0.0.1:5000/api/colleges"
 export const fetchColleges = async (): Promise<{
   colleges: College[]
 }> => {
-  const res = await fetch(`${BASE_URL}`, {
+  const res = await fetch(`${BASE_URL}/list`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -15,6 +15,42 @@ export const fetchColleges = async (): Promise<{
 
   const data = await res.json()
   console.log("Fetched colleges:", data.colleges)
+  return data
+}
+
+export const fetchCollegesFiltered = async (
+  page: number = 1,
+  perPage: number = 15,
+  search: string = "",
+  searchBy: "all" | "collegeCode" | "collegeName" = "all",
+  sortBy: "collegeCode" | "collegeName" = "collegeCode",
+  order: "asc" | "desc" = "asc"
+): Promise<{
+  colleges: College[]
+  total: number
+  pages: number
+  current_page: number
+}> => {
+  const safeSearchBy = searchBy === "all" ? "all" : searchBy
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString(),
+    search,
+    searchBy: safeSearchBy,
+    sortBy,
+    order,
+  })
+
+  const res = await fetch(`${BASE_URL}?${params.toString()}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  const data = await res.json()
+  console.log("Total colleges:", data.total)
   return data
 }
 

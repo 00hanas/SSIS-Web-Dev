@@ -47,6 +47,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const loadPrograms = async () => {
@@ -61,6 +62,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
   }, [])
 
   const handleAddStudent = async () => {
+    setLoading(true)
     const studentIdPattern = /^\d{4}-\d{4}$/
     if (
       !studentID.trim() ||
@@ -71,6 +73,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       !gender.trim()
     ) {
       setErrorMessage("Please fill in all fields.")
+      setLoading(false)
       return
     }
 
@@ -78,6 +81,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       setErrorMessage(
         "Student ID must follow the format XXXX-XXXX using digits only."
       )
+      setLoading(false)
       return
     }
 
@@ -89,6 +93,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       ) {
         setErrorMessage("Only image files are allowed.")
         if (fileInputRef.current) fileInputRef.current.value = ""
+        setLoading(false)
         return
       }
 
@@ -96,6 +101,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       if (photoFile.size > maxSize) {
         setErrorMessage("Photo must be smaller than 2 MB.")
         if (fileInputRef.current) fileInputRef.current.value = ""
+        setLoading(false)
         return
       }
     }
@@ -145,6 +151,8 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -345,10 +353,11 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
             </DialogClose>
             <Button
               className="cursor-pointer"
-              type="button"
+              type="submit"
               onClick={handleAddStudent}
+              disabled={loading}
             >
-              Save
+              {loading ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

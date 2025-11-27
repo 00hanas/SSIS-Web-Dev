@@ -117,4 +117,93 @@ class Student():
         total = cursor.fetchone()[0]
         cursor.close()
         return total
+    
+    @classmethod
+    def query(cls, search, search_by, sort_by, sort_order, page, page_size):
+        db = get_db()
+        cursor = db.cursor()
+
+        sql = "SELECT studentid, firstname, lastname, programcode, yearlevel, gender,  photo_url FROM student"
+        params = []
+
+        # Search
+        if search:
+            like = f"%{search}%"
+            if search_by == "studentID":
+                sql += " WHERE LOWER(studentid) LIKE %s"
+                params.append(like)
+            elif search_by == "firstName":
+                sql += " WHERE LOWER(firstname) LIKE %s"
+                params.append(like)
+            elif search_by == "lastName":
+                sql += " WHERE LOWER(lastname) LIKE %s"
+                params.append(like)
+            elif search_by == "yearLevel":
+                sql += " WHERE LOWER(CAST(yearlevel as TEXT)) LIKE %s"
+                params.append(like)
+            elif search_by == "gender":
+                sql += " WHERE LOWER(gender) LIKE %s"
+                params.append(like)
+            elif search_by == "programCode":
+                sql += " WHERE LOWER(programcode) LIKE %s"
+                params.append(like)
+            elif search_by == "all":
+                sql += (
+                    " WHERE LOWER(studentid) LIKE %s OR LOWER(firstname) LIKE %s OR LOWER(lastname) LIKE %s OR LOWER(CAST(yearlevel as TEXT)) LIKE %s OR LOWER(gender) LIKE %s OR LOWER(programcode) LIKE %s"
+                )
+                params.extend([like, like, like, like, like, like])
+
+        # Sorting
+        sort_map = {
+            "studentID": "studentid",
+            "firstName": "firstname",
+            "lastName": "lastname",
+            "yearLevel": "yearlevel",
+            "gender": "gender",
+            "programCode": "programcode",
+        }
+        sort_column = sort_map.get(sort_by, "studentid")
+        sql += f" ORDER BY {sort_column} {sort_order.upper()}"
+
+        # Pagination
+        offset = (page - 1) * page_size
+        sql += " LIMIT %s OFFSET %s"
+        params.extend([page_size, offset])
+
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+        # Count total
+        count_sql = "SELECT COUNT(*) FROM student"
+        count_params = []
+        if search:
+            if search_by == "studentID":
+                count_sql += " WHERE LOWER(studentid) LIKE %s"
+                count_params = [like]
+            elif search_by == "firstName":
+                count_sql += " WHERE LOWER(firstname) LIKE %s"
+                count_params = [like]
+            elif search_by == "lastName":
+                count_sql += " WHERE LOWER(lastname) LIKE %s"
+                count_params = [like]
+            elif search_by == "yearLevel":
+                count_sql += " WHERE LOWER(CAST(yearlevel as TEXT)) LIKE %s"
+                count_params = [like]
+            elif search_by == "gender":
+                count_sql += " WHERE LOWER(gender) LIKE %s"
+                count_params = [like]
+            elif search_by == "programCode":
+                count_sql += " WHERE LOWER(programcode) LIKE %s"
+                count_params = [like]
+            elif search_by == "all":
+                count_sql += (
+                    " WHERE LOWER(studentid) LIKE %s OR LOWER(firstname) LIKE %s OR LOWER(lastname) LIKE %s OR LOWER(CAST(yearlevel as TEXT)) LIKE %s OR LOWER(gender) LIKE %s OR LOWER(programcode) LIKE %s"
+                )
+                count_params = [like, like, like, like, like, like]
+
+        cursor.execute(count_sql, count_params)
+        total = cursor.fetchone()[0]
+
+        cursor.close()
+        return [cls(*row) for row in rows], total
 

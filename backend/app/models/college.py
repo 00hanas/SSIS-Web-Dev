@@ -80,3 +80,60 @@ class College:
         total = cursor.fetchone()[0]
         cursor.close()
         return total
+    
+    @classmethod
+    def query(cls, search, search_by, sort_by, sort_order, page, page_size):
+        db = get_db()
+        cursor = db.cursor()
+
+        # Base query
+        sql = "SELECT collegecode, collegename FROM college"
+        params = []
+
+        # Search
+        if search:
+            like = f"%{search}%"
+            if search_by == "collegeCode":
+                sql += " WHERE LOWER(collegecode) LIKE %s"
+                params.append(like)
+            elif search_by == "collegeName":
+                sql += " WHERE LOWER(collegename) LIKE %s"
+                params.append(like)
+            elif search_by == "all":
+                sql += " WHERE LOWER(collegecode) LIKE %s OR LOWER(collegename) LIKE %s"
+                params.extend([like, like])
+
+        # Sorting (map to actual DB column names)
+        sort_map = {
+            "collegeCode": "collegecode",
+            "collegeName": "collegename"
+        }
+        sort_column = sort_map.get(sort_by, "collegecode")
+        sql += f" ORDER BY {sort_column} {sort_order.upper()}"
+
+        # Pagination
+        offset = (page - 1) * page_size
+        sql += " LIMIT %s OFFSET %s"
+        params.extend([page_size, offset])
+
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+        # Count total
+        count_sql = "SELECT COUNT(*) FROM college"
+        if search:
+            if search_by == "collegeCode":
+                count_sql += " WHERE LOWER(collegecode) LIKE %s"
+                cursor.execute(count_sql, [like])
+            elif search_by == "collegeName":
+                count_sql += " WHERE LOWER(collegename) LIKE %s"
+                cursor.execute(count_sql, [like])
+            elif search_by == "all":
+                count_sql += " WHERE LOWER(collegecode) LIKE %s OR LOWER(collegename) LIKE %s"
+                cursor.execute(count_sql, [like, like])
+        else:
+            cursor.execute(count_sql)
+        total = cursor.fetchone()[0]
+
+        cursor.close()
+        return [cls(*row) for row in rows], total

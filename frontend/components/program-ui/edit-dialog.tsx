@@ -49,6 +49,7 @@ export function EditProgramDialog({
   const [collegeCode, setCcode] = useState(program.collegeCode)
   const [updatedProgram, setUpdatedProgram] = useState<Program | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (visible) {
@@ -84,6 +85,7 @@ export function EditProgramDialog({
 
   const handleEditProgram = async () => {
     const originalCode = program.programCode
+    setLoading(true)
 
     if (!programCode.trim() || !programName.trim() || !collegeCode.trim()) {
       setErrorMessage("Please fill in all fields.")
@@ -96,6 +98,7 @@ export function EditProgramDialog({
       collegeCode.trim() === program.collegeCode.trim()
     ) {
       setErrorMessage("No changes detected.")
+      setLoading(false)
       return
     }
 
@@ -120,6 +123,8 @@ export function EditProgramDialog({
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -202,10 +207,11 @@ export function EditProgramDialog({
             </DialogClose>
             <Button
               className="cursor-pointer"
-              type="button"
+              type="submit"
               onClick={handleEditProgram}
+              disabled={loading}
             >
-              Save Changes
+              {loading ? "Saving Changes..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

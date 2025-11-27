@@ -39,6 +39,7 @@ export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
   const [collegeCode, setCcode] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
   const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const loadColleges = async () => {
@@ -52,9 +53,11 @@ export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
     loadColleges()
   }, [])
 
-  const handleAddProgram = async () => {
+  const handleAddProgram = async (): Promise<void> => {
+    setLoading(true)
     if (!programCode.trim() || !programName.trim() || !collegeCode.trim()) {
       setErrorMessage("Please fill in all fields.")
+      setLoading(false)
       return
     }
 
@@ -83,6 +86,8 @@ export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -176,10 +181,11 @@ export function AddProgramDialog({ onProgramAdded }: AddProgramDialogProps) {
             </DialogClose>
             <Button
               className="cursor-pointer"
-              type="button"
+              type="submit"
               onClick={handleAddProgram}
+              disabled={loading}
             >
-              Save
+              {loading ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

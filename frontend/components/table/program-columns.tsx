@@ -11,7 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EditNoteSharp as EditIcon } from "@mui/icons-material"
-import { DeleteOutlineSharp as DeleteIcon } from "@mui/icons-material"
+import {
+  DeleteOutlineSharp as DeleteIcon,
+  UnfoldMore as UnsortIcon,
+  KeyboardArrowUp as SortAsc,
+  KeyboardArrowDown as SortDesc,
+} from "@mui/icons-material"
 
 export type Program = {
   programCode: string
@@ -21,19 +26,37 @@ export type Program = {
 
 export const ProgramColumns = (
   setEditDialog: (program: Program) => void,
-  setDeleteDialog: (program: Program) => void
+  setDeleteDialog: (program: Program) => void,
+  sortBy: "programCode" | "programName" | "collegeCode",
+  sortOrder: "asc" | "desc",
+  setSortBy: (key: "programCode" | "programName" | "collegeCode") => void,
+  setSortOrder: (order: "asc" | "desc") => void
 ): ColumnDef<Program>[] => [
   {
     accessorKey: "programCode",
     size: 150,
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "programCode") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("programCode")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Program Code
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "programCode" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",
@@ -41,28 +64,56 @@ export const ProgramColumns = (
   {
     accessorKey: "programName",
     size: 500,
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "programName") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("programName")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Program Name
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "programName" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
     accessorKey: "collegeCode",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "collegeCode") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("collegeCode")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         College Code
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "collegeCode" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ row }) => {

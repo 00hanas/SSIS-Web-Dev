@@ -65,6 +65,7 @@ export function EditStudentDialog({
   const [photoUrl, setPhotoUrl] = useState(student.photoUrl)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (visible) {
@@ -119,6 +120,7 @@ export function EditStudentDialog({
   }, [])
 
   const handleEditStudent = async () => {
+    setLoading(true)
     const originalId = student.studentID
     const studentIdPattern = /^\d{4}-\d{4}$/
 
@@ -131,11 +133,13 @@ export function EditStudentDialog({
       !gender.trim()
     ) {
       setErrorMessage("Please fill in all fields.")
+      setLoading(false)
       return
     }
 
     if (!studentIdPattern.test(studentID.trim())) {
       setErrorMessage("Student ID must follow the format YYYY-NNNN.")
+      setLoading(false)
       return
     }
 
@@ -149,6 +153,7 @@ export function EditStudentDialog({
       student.photoUrl === photoUrl
     ) {
       setErrorMessage("No changes detected.")
+      setLoading(false)
       return
     }
 
@@ -159,6 +164,7 @@ export function EditStudentDialog({
         )
       ) {
         setErrorMessage("Only image files are allowed.")
+        setLoading(false)
         return
       }
 
@@ -166,6 +172,7 @@ export function EditStudentDialog({
       if (photoFile.size > maxSize) {
         setErrorMessage("Photo must be smaller than 2 MB.")
         if (fileInputRef.current) fileInputRef.current.value = ""
+        setLoading(false)
         return
       }
     }
@@ -217,6 +224,8 @@ export function EditStudentDialog({
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -411,10 +420,11 @@ export function EditStudentDialog({
             </DialogClose>
             <Button
               className="cursor-pointer"
-              type="button"
+              type="submit"
               onClick={handleEditStudent}
+              disabled={loading}
             >
-              Save
+              {loading ? "Saving Changes..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

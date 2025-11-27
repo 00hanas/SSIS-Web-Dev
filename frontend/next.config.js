@@ -5,5 +5,6 @@ const nextConfig = {
     unoptimized: true,
     domains: ["liofppzunluhdsrbwogc.supabase.co"],
   },
+  assetPrefix: "/static",
 }
 module.exports = nextConfig

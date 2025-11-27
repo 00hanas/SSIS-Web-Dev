@@ -11,7 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EditNoteSharp as EditIcon } from "@mui/icons-material"
-import { DeleteOutlineSharp as DeleteIcon } from "@mui/icons-material"
+import {
+  DeleteOutlineSharp as DeleteIcon,
+  UnfoldMore as UnsortIcon,
+  KeyboardArrowUp as SortAsc,
+  KeyboardArrowDown as SortDesc,
+} from "@mui/icons-material"
 import { PersonPin as PersonIcon } from "@mui/icons-material"
 import Image from "next/image"
 
@@ -28,14 +33,32 @@ export type Student = {
 export const StudentColumns = (
   setViewDialog: (student: Student) => void,
   setEditDialog: (student: Student) => void,
-  setDeleteDialog: (student: Student) => void
+  setDeleteDialog: (student: Student) => void,
+  sortBy:
+    | "studentID"
+    | "firstName"
+    | "lastName"
+    | "yearLevel"
+    | "gender"
+    | "programCode",
+  sortOrder: "asc" | "desc",
+  setSortBy: (
+    key:
+      | "studentID"
+      | "firstName"
+      | "lastName"
+      | "yearLevel"
+      | "gender"
+      | "programCode"
+  ) => void,
+  setSortOrder: (order: "asc" | "desc") => void
 ): ColumnDef<Student>[] => [
   {
     accessorKey: "photoUrl",
     size: 60,
     header: "Photo",
     cell: ({ row }) => {
-      console.log("Row data:", row.original) // check what photoUrl really is
+      console.log("Row data:", row.original)
       const photoUrl = row.original.photoUrl
       const name = `${row.original.firstName} ${row.original.lastName}`
 
@@ -57,56 +80,112 @@ export const StudentColumns = (
   {
     accessorKey: "studentID",
     size: 150,
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "studentID") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("studentID")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Student ID
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "studentID" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
     accessorKey: "firstName",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "firstName") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("firstName")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         First Name
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "firstName" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
     accessorKey: "lastName",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "lastName") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("lastName")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Last Name
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "lastName" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
     accessorKey: "programCode",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "programCode") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("programCode")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Program Code
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "programCode" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ row }) => {
@@ -120,28 +199,56 @@ export const StudentColumns = (
   },
   {
     accessorKey: "yearLevel",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "yearLevel") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("yearLevel")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Year Level
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "yearLevel" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
     accessorKey: "gender",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "gender") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("gender")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         Gender
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "gender" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
     cell: ({ getValue }) => getValue() ?? "—",

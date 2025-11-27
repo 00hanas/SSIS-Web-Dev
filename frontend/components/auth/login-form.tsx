@@ -37,6 +37,7 @@ export default function LoginForm({
       await loginUser(email, password)
       router.push("/dashboard")
     } catch (err: unknown) {
+      setLoading(false)
       if (err instanceof Error) {
         setError(err.message || "Something went wrong. Please try again.")
       } else if (typeof err === "object" && err && "status" in err) {
@@ -49,17 +50,15 @@ export default function LoginForm({
       } else {
         setError("Something went wrong. Please try again.")
       }
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
     <div
-      className={cn("mx-auto flex w-full max-w-3xl flex-col gap-6", className)}
+      className={cn("mx-auto flex w-full max-w-4xl flex-col gap-6", className)}
       {...props}
     >
-      <Card className="overflow-hidden p-0">
+      <Card className="!w-[700px] overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">

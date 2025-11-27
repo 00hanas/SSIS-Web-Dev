@@ -1,6 +1,5 @@
 "use client"
 
-import { CardDemographic } from "@/components/dashboard-ui/cards"
 import {
   StudentColumns,
   Student,
@@ -14,28 +13,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { EditStudentDialog } from "../../../components/student-ui/edit-dialog"
 import { DeleteStudentDialog } from "../../../components/student-ui/delete-dialog"
 import { useAuth } from "@/hooks/useAuth"
-import { SortingState } from "@tanstack/react-table"
-import { loadColleges, loadPrograms, loadStudents } from "@/lib/loaders"
 import { PageSkeleton } from "@/components/global/page-skeleton"
-import { SearchInput } from "@/components/college-ui/search-input"
+import { SearchInput } from "@/components/global/search-input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ViewStudentDialog } from "@/components/student-ui/view-dialog"
+import { fetchStudentsFiltered } from "@/lib/api/student-api"
 
 export default function StudentsPage() {
   const { authenticated, loading } = useAuth()
-  const [initialLoading, setInitialLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [students, setStudents] = useState<Student[]>([])
-  const [totalColleges, setTotalColleges] = useState(0)
-  const [totalPrograms, setTotalPrograms] = useState(0)
-  const [totalStudents, setTotalStudents] = useState(0)
+  const [filteredTotalStudents, setFilteredTotalStudents] = useState(0)
   const [viewSelectedStudent, setViewStudent] = useState<Student | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
+  const [search, setSearch] = useState("")
   const [searchBy, setSearchBy] = useState<
     | "all"
     | "studentID"
@@ -45,8 +41,17 @@ export default function StudentsPage() {
     | "yearLevel"
     | "gender"
   >("all")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sortBy, setSortBy] = useState<
+    | "studentID"
+    | "firstName"
+    | "lastName"
+    | "programCode"
+    | "yearLevel"
+    | "gender"
+  >("studentID")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
   const openEditDialog = (student: Student) => {
     setSelectedStudent(student)
@@ -56,91 +61,34 @@ export default function StudentsPage() {
     setViewStudent(student)
   }
 
-  useEffect(() => {
-    const fetchStudentsData = async () => {
-      try {
-        const { students, total } = await loadStudents()
-        setStudents(students)
-        setTotalStudents(total)
-      } catch (error) {
-        console.error("Failed to load students:", error)
-      } finally {
-        setInitialLoading(false)
-      }
-    }
-    fetchStudentsData()
-  }, [])
-
-  useEffect(() => {
-    const fetchCollegesData = async () => {
-      try {
-        const { total } = await loadColleges()
-        setTotalColleges(total)
-      } catch (error) {
-        console.error("Failed to load colleges:", error)
-      }
-    }
-    fetchCollegesData()
-  }, [])
-
-  useEffect(() => {
-    const fetchProgramsData = async () => {
-      try {
-        const { total } = await loadPrograms()
-        setTotalPrograms(total)
-      } catch (error) {
-        console.error("Failed to load programs:", error)
-      }
-    }
-    fetchProgramsData()
-  }, [])
-
-  const refreshStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setIsLoading(true)
     try {
-      const { students, total } = await loadStudents()
-      setStudents(students)
-      setTotalStudents(total)
+      const data = await fetchStudentsFiltered(
+        page,
+        10,
+        search,
+        searchBy,
+        sortBy,
+        sortOrder
+      )
+      setStudents(data.students)
+      setTotalPages(data.pages)
+      setFilteredTotalStudents(data.total)
     } catch (error) {
-      console.error("Failed to refresh students:", error)
+      console.error("Failed to load students:", error)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [page, search, searchBy, sortBy, sortOrder])
 
-  const filteredStudents = students.filter((student) => {
-    const term = searchTerm.toLowerCase()
-    if (!term) return true
+  useEffect(() => {
+    if (authenticated) {
+      fetchStudents()
+    }
+  }, [authenticated, fetchStudents])
 
-    if (searchBy === "studentID") {
-      return student.studentID.toLowerCase().includes(term)
-    }
-    if (searchBy === "firstName") {
-      return student.firstName.toLowerCase().includes(term)
-    }
-    if (searchBy === "lastName") {
-      return student.lastName.toLowerCase().includes(term)
-    }
-    if (searchBy === "programCode") {
-      return student.programCode.toLowerCase().includes(term)
-    }
-    if (searchBy === "yearLevel") {
-      return student.yearLevel.toString().includes(term)
-    }
-    if (searchBy === "gender") {
-      return student.gender.toLowerCase().includes(term)
-    }
-    return (
-      student.studentID.toLowerCase().includes(term) ||
-      student.firstName.toLowerCase().includes(term) ||
-      student.lastName.toLowerCase().includes(term) ||
-      student.programCode.toLowerCase().includes(term) ||
-      student.yearLevel.toString().includes(term) ||
-      student.gender.toLowerCase().includes(term)
-    )
-  })
-
-  if (loading || initialLoading) {
+  if (loading) {
     return <PageSkeleton />
   }
   if (!authenticated && !loading) {
@@ -153,23 +101,15 @@ export default function StudentsPage() {
 
   return (
     <div className="container w-full justify-center px-6">
-      <CardDemographic
-        colleges={totalColleges}
-        programs={totalPrograms}
-        students={totalStudents}
-      />
-
-      <div className="container mt-5 mb-2 flex flex-col">
+      <div className="container mb-2">
         <h1 className="mb text-2xl font-semibold tracking-wide">Students</h1>
-        <p className="mb tracking-wide">Here&apos;s the list of students.</p>
       </div>
-
       <div className="mb-4 flex">
         <div className="flex gap-2">
           <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            total={filteredStudents.length}
+            value={search}
+            onChange={setSearch}
+            total={filteredTotalStudents}
           />
 
           <Select
@@ -216,13 +156,13 @@ export default function StudentsPage() {
           </Select>
         </div>
         <div className="ml-auto">
-          <AddStudentDialog onStudentAdded={refreshStudents} />
+          <AddStudentDialog onStudentAdded={fetchStudents} />
         </div>
       </div>
 
       <div className="container">
         {isLoading ? (
-          <Skeleton className="container mx-auto h-[300px] rounded-xl py-10" />
+          <Skeleton className="container mx-auto h-[600px] rounded-xl py-10" />
         ) : students.length === 0 ? (
           <div className="text-muted-foreground py-6 text-center">No data.</div>
         ) : (
@@ -231,11 +171,16 @@ export default function StudentsPage() {
               columns={StudentColumns(
                 openViewDialog,
                 openEditDialog,
-                setStudentToDelete
+                setStudentToDelete,
+                sortBy,
+                sortOrder,
+                setSortBy,
+                setSortOrder
               )}
-              data={filteredStudents}
-              sorting={sorting}
-              setSorting={setSorting}
+              data={students}
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
             />
 
             {viewSelectedStudent && (
@@ -252,7 +197,7 @@ export default function StudentsPage() {
                 visible={true}
                 onClose={() => setSelectedStudent(null)}
                 onStudentUpdated={() => {
-                  refreshStudents()
+                  fetchStudents()
                   setSelectedStudent(null)
                 }}
               />
@@ -264,7 +209,7 @@ export default function StudentsPage() {
                 visible={true}
                 onClose={() => setStudentToDelete(null)}
                 onStudentDeleted={() => {
-                  refreshStudents()
+                  fetchStudents()
                   setStudentToDelete(null)
                 }}
               />

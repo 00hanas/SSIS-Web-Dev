@@ -86,7 +86,7 @@ def delete_student(studentID):
     return jsonify({'message': f'Student {studentID} deleted'})
 
 #list
-@student_bp.route('', methods=['GET'])
+@student_bp.route('/list', methods=['GET'])
 @jwt_required()
 def list_students():
     try:
@@ -99,6 +99,43 @@ def list_students():
     except Exception as e:
         print("🔥 Error in list_students:", str(e))
         return jsonify({"error": "Internal server error"}), 500
+    
+#page display with search, sort, pagination
+@student_bp.route('', methods=['GET'])
+@jwt_required()
+def list_students_filtered():
+    try:
+        current_user_id = get_jwt_identity()
+        print("Authenticated user:", current_user_id)
+
+        search = request.args.get('search', '').lower()
+        search_by = request.args.get('searchBy', 'all')
+        sort_by = request.args.get('sortBy', 'studentID')
+        sort_order = request.args.get('order', 'asc')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+
+        students, total = Student.query(
+            search=search,
+            search_by=search_by,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=per_page
+        )
+
+        pages = (total + per_page - 1) // per_page
+
+        return jsonify({
+            'students': [s.serialize() for s in students],
+            'total': total,
+            'pages': pages,
+            'current_page': page
+        }), 200
+    except Exception as e:
+        print("🔥 Error in list_students:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
+
 
 @student_bp.route("/by-program", methods=["GET"])
 @jwt_required()

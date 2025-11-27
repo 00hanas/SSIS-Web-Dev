@@ -5,7 +5,7 @@ const BASE_URL = "http://127.0.0.1:5000/api/programs"
 export const fetchPrograms = async (): Promise<{
   programs: Program[]
 }> => {
-  const res = await fetch(`${BASE_URL}`, {
+  const res = await fetch(`${BASE_URL}/list`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -15,6 +15,42 @@ export const fetchPrograms = async (): Promise<{
 
   const data = await res.json()
   console.log("Fetched programs:", data.programs)
+  return data
+}
+
+export const fetchProgramsFiltered = async (
+  page: number = 1,
+  perPage: number = 15,
+  search: string = "",
+  searchBy: "all" | "programCode" | "programName" | "collegeCode" = "all",
+  sortBy: "programCode" | "programName" | "collegeCode" = "programCode",
+  order: "asc" | "desc" = "asc"
+): Promise<{
+  programs: Program[]
+  total: number
+  pages: number
+  current_page: number
+}> => {
+  const safeSearchBy = searchBy === "all" ? "all" : searchBy
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString(),
+    search,
+    searchBy: safeSearchBy,
+    sortBy,
+    order,
+  })
+
+  const res = await fetch(`${BASE_URL}?${params.toString()}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  const data = await res.json()
+  console.log("Total programs:", data.total)
   return data
 }
 

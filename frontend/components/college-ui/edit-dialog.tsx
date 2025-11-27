@@ -37,6 +37,7 @@ export function EditCollegeDialog({
   const [collegeName, setName] = useState(college.collegeName)
   const [updatedCollege, setUpdatedCollege] = useState<College | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (visible) {
@@ -58,9 +59,11 @@ export function EditCollegeDialog({
 
   const handleEditCollege = async () => {
     const originalCode = college.collegeCode
+    setLoading(true)
 
     if (!collegeCode.trim() || !collegeName.trim()) {
       setErrorMessage("Please fill in both fields.")
+      setLoading(false)
       return
     }
 
@@ -69,6 +72,7 @@ export function EditCollegeDialog({
       collegeName.trim() === college.collegeName.trim()
     ) {
       setErrorMessage("No changes detected.")
+      setLoading(false)
       return
     }
 
@@ -92,6 +96,8 @@ export function EditCollegeDialog({
       } else {
         setErrorMessage("Something went wrong. Try again.")
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -155,10 +161,11 @@ export function EditCollegeDialog({
             </DialogClose>
             <Button
               className="cursor-pointer"
-              type="button"
+              type="submit"
               onClick={handleEditCollege}
+              disabled={loading}
             >
-              Save Changes
+              {loading ? "Saving Changes..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -11,7 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EditNoteSharp as EditIcon } from "@mui/icons-material"
-import { DeleteOutlineSharp as DeleteIcon } from "@mui/icons-material"
+import {
+  DeleteOutlineSharp as DeleteIcon,
+  UnfoldMore as UnsortIcon,
+  KeyboardArrowUp as SortAsc,
+  KeyboardArrowDown as SortDesc,
+} from "@mui/icons-material"
 
 export type College = {
   collegeCode: string
@@ -20,35 +25,69 @@ export type College = {
 
 export const CollegeColumns = (
   setEditDialog: (college: College) => void,
-  setDeleteDialog: (college: College) => void
+  setDeleteDialog: (college: College) => void,
+  sortBy: "collegeCode" | "collegeName",
+  sortOrder: "asc" | "desc",
+  setSortBy: (key: "collegeCode" | "collegeName") => void,
+  setSortOrder: (order: "asc" | "desc") => void
 ): ColumnDef<College>[] => [
   {
     accessorKey: "collegeCode",
     size: 150,
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "collegeCode") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("collegeCode")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         College Code
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "collegeCode" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
+    enableSorting: true,
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
     accessorKey: "collegeName",
-    header: ({ column }) => (
+    header: () => (
       <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => {
+          if (sortBy === "collegeName") {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+          } else {
+            setSortBy("collegeName")
+            setSortOrder("asc")
+          }
+        }}
         className="text-foreground cursor-pointer bg-transparent hover:bg-transparent"
       >
         College Name
-        {column.getIsSorted() === "asc"}
-        {column.getIsSorted() === "desc"}
+        {sortBy === "collegeName" ? (
+          sortOrder === "asc" ? (
+            <SortAsc className="text-primary ml-2 h-4 w-4" />
+          ) : (
+            <SortDesc className="text-primary ml-2 h-4 w-4" />
+          )
+        ) : (
+          <UnsortIcon className="text-primary ml-2 h-4 w-4" />
+        )}
       </Button>
     ),
+    enableSorting: true,
     cell: ({ getValue }) => getValue() ?? "—",
   },
   {
