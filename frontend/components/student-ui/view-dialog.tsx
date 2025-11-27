@@ -1,6 +1,12 @@
 import { fetchStudent } from "@/lib/api/student-api"
 import { useEffect, useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog"
 import Image from "next/image"
 import { Badge } from "../ui/badge"
 import { fetchProgramsForDropdown } from "@/lib/api/program-api"
@@ -68,11 +74,11 @@ export function ViewStudentDialog({
         if (!open) onClose()
       }}
     >
-      <DialogContent className="sm:max-w-[640px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Student Profile</DialogTitle>
         </DialogHeader>
-        <div className="container mt-2 mb-5">
+        <div className="container mt-5 mb-3">
           <div className="mb-8 flex flex-row">
             {studentData.photoUrl ? (
               <Image
@@ -92,46 +98,42 @@ export function ViewStudentDialog({
               </Badge>
             </div>
           </div>
-          <div className="flex-cols-2 mr-10 ml-10 flex gap-10 rounded-sm border p-5 shadow-sm">
-            <div className="mr-5 flex !w-2/3 flex-col">
-              <div className="mb-5 flex flex-col">
-                <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
-                  Program
-                </span>
-                {program ? (
-                  <>
-                    <span className="text-sm">{program.programName}</span>
-                  </>
-                ) : (
-                  <span className="text-sm">{studentData.programCode}</span>
-                )}
-              </div>
-              <div className="mb-5 flex flex-col">
-                <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
-                  Year Level
-                </span>
-                <span className="text-sm">{studentData.yearLevel}</span>
-              </div>
+          <div className="mr-5 ml-5 flex flex-col gap-2 rounded-sm p-5 shadow-sm">
+            <div className="mb-5 flex flex-col">
+              <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
+                Program
+              </span>
+              {program ? (
+                <>
+                  <span className="text-sm">{program.programName}</span>
+                </>
+              ) : (
+                <span className="text-sm">{studentData.programCode}</span>
+              )}
             </div>
-            <div className="flex flex-col">
-              <div className="mb-5 flex flex-col">
-                <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
-                  College
-                </span>
-                {program ? (
-                  <>
-                    <span className="text-sm">{program.collegeCode}</span>
-                  </>
-                ) : (
-                  <span className="text-sm">N/A</span>
-                )}
-              </div>
-              <div className="mb-5 flex flex-col">
-                <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
-                  Gender
-                </span>
-                <span className="text-sm">{studentData.gender}</span>
-              </div>
+            <div className="mb-5 flex flex-col">
+              <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
+                College
+              </span>
+              {program ? (
+                <>
+                  <span className="text-sm">{program.collegeCode}</span>
+                </>
+              ) : (
+                <span className="text-sm">N/A</span>
+              )}
+            </div>
+            <div className="mb-5 flex flex-col">
+              <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
+                Year Level
+              </span>
+              <span className="text-sm">{studentData.yearLevel}</span>
+            </div>
+            <div className="mb-5 flex flex-col">
+              <span className="text-muted-foreground mb-2 text-[11px] tracking-wide">
+                Gender
+              </span>
+              <span className="text-sm">{studentData.gender}</span>
             </div>
           </div>
         </div>

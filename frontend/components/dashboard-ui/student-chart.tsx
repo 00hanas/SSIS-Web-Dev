@@ -12,6 +12,7 @@ import {
 import { fetchStudentsByProgram } from "@/lib/api/student-api"
 import { fetchProgramsForDropdown } from "@/lib/api/program-api"
 import { Student } from "@/components/table/student-columns"
+import Image from "next/image"
 
 type Program = {
   programCode: string
@@ -84,9 +85,11 @@ export default function StudentChart() {
                 key={s.studentID}
                 className="bg-muted/30 dark:bg-muted/10 hover:bg-accent/40 dark:hover:bg-accent/40 flex items-center gap-3 rounded-lg p-3 transition"
               >
-                <img
-                  src={"/student-icon.jpg"}
+                <Image
+                  src={s.photoUrl || "/default-profile.png"}
                   alt={`${s.firstName} ${s.lastName}`}
+                  width={150}
+                  height={150}
                   className="h-8 w-8 rounded-full object-cover"
                 />
                 <div className="flex flex-col">

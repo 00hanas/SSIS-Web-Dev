@@ -1,4 +1,5 @@
 import { Student } from "@/components/table/student-columns"
+import { supabase } from "../supabase/client"
 
 const BASE_URL = "http://127.0.0.1:5000/api/students"
 
@@ -172,4 +173,92 @@ export async function fetchStudentsTotal(): Promise<number> {
   })
   const data = await res.json()
   return data.total
+}
+
+export async function deleteStudentFolder(studentID: string) {
+  try {
+    const folderPath = `${studentID}/`
+
+    // List files inside the folder
+    const { data: files, error: listError } = await supabase.storage
+      .from("students-photos")
+      .list(folderPath, { limit: 1000 })
+
+    if (listError) {
+      console.error("Error listing files:", listError)
+      return
+    }
+
+    if (!files || files.length === 0) {
+      console.log("No files found in folder:", folderPath)
+      return
+    }
+
+    // Build full file paths
+    const filePaths = files.map((file) => `${folderPath}${file.name}`)
+
+    const { error: delError } = await supabase.storage
+      .from("students-photos")
+      .remove(filePaths)
+
+    if (delError) {
+      console.error("Error deleting files:", delError)
+      return
+    }
+
+    console.log(`Deleted all files under ${folderPath}`)
+  } catch (err) {
+    console.error("Unexpected error deleting folder:", err)
+  }
+}
+
+export async function updateStudentAssets(
+  oldID: string,
+  newID: string,
+  newPhotoFile?: File
+): Promise<string | null> {
+  let newPhotoUrl: string | null = null
+
+  if (oldID !== newID) {
+    const { data, error } = await supabase.storage
+      .from("students-photos")
+      .list(oldID)
+
+    if (error) {
+      console.error("Error listing files:", error)
+      return null
+    }
+
+    for (const file of data) {
+      const oldPath = `${oldID}/${file.name}`
+      const newPath = `${newID}/${file.name}`
+
+      await supabase.storage.from("students-photos").copy(oldPath, newPath)
+      await supabase.storage.from("students-photos").remove([oldPath])
+
+      const { data: urlData } = supabase.storage
+        .from("students-photos")
+        .getPublicUrl(newPath)
+
+      newPhotoUrl = urlData.publicUrl
+    }
+  }
+
+  if (newPhotoFile) {
+    const filePath = `${newID}/${Date.now()}-${newPhotoFile.name}`
+
+    const { error: uploadError } = await supabase.storage
+      .from("students-photos")
+      .upload(filePath, newPhotoFile, { upsert: true })
+
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage
+        .from("students-photos")
+        .getPublicUrl(filePath)
+
+      newPhotoUrl = urlData.publicUrl
+    }
+  }
+
+  return newPhotoUrl
 }

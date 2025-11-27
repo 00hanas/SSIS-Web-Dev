@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { deleteStudent } from "@/lib/api/student-api"
+import { deleteStudent, deleteStudentFolder } from "@/lib/api/student-api"
 import { useState } from "react"
 
 interface DeleteStudentDialogProps {
@@ -29,6 +29,7 @@ export function DeleteStudentDialog({
   const [deletedStudent, setDeletedStudent] = useState<Student | null>(null)
   const handleDeleteStudent = async () => {
     try {
+      await deleteStudentFolder(student.studentID)
       await deleteStudent(student.studentID)
       setDeletedStudent(student)
     } catch (error) {

@@ -23,7 +23,11 @@ import {
 import { fetchProgramsForDropdown } from "@/lib/api/program-api"
 import { Program } from "../table/program-columns"
 import { Student } from "@/components/table/student-columns"
-import { fetchStudent, updateStudent } from "@/lib/api/student-api"
+import {
+  fetchStudent,
+  updateStudent,
+  updateStudentAssets,
+} from "@/lib/api/student-api"
 import { EntityConfirmationDialog } from "@/components/global/entity-confirmation-dialog"
 import { supabase } from "@/lib/supabase/client"
 import Image from "next/image"
@@ -139,24 +143,22 @@ export function EditStudentDialog({
     }
 
     try {
-      let uploadedPhotoUrl = student.photoUrl || "/student-icon.jpg"
+      let uploadedPhotoUrl = photoUrl || student.photoUrl || "/student-icon.jpg"
 
       if (photoFile) {
-        const filePath = `${studentID}/${Date.now()}-${photoFile.name}`
-        const { error } = await supabase.storage
-          .from("students-photos")
-          .upload(filePath, photoFile, { upsert: true })
-
-        if (error) {
-          console.error("Upload error:", error)
-        } else {
-          const { data } = supabase.storage
-            .from("students-photos")
-            .getPublicUrl(filePath)
-          uploadedPhotoUrl = data.publicUrl
-          setPhotoUrl(uploadedPhotoUrl)
-        }
+        // ALWAYS upload the new photo
+        const newUrl = await updateStudentAssets(
+          originalId,
+          studentID.trim(),
+          photoFile
+        )
+        if (newUrl) uploadedPhotoUrl = newUrl
+      } else if (originalId !== studentID.trim()) {
+        // ID changed but no new photo — so move existing photo
+        const newUrl = await updateStudentAssets(originalId, studentID.trim())
+        if (newUrl) uploadedPhotoUrl = newUrl
       }
+
       const response = await updateStudent(
         originalId,
         studentID.trim(),
@@ -302,7 +304,7 @@ export function EditStudentDialog({
                     alt="Current student photo"
                     width={75}
                     height={75}
-                    className="rounded-full"
+                    className="!h-15 !w-15 rounded-full object-cover"
                   />
                 )}
                 <Input
