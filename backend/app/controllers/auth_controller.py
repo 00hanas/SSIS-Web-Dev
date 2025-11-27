@@ -8,6 +8,7 @@ from app.forms.login_form import LoginForm
 from app.forms.signup_form import SignUpForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text
+from app.models.user import User
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix="/api/auth")
 
@@ -27,18 +28,15 @@ def login():
         if not form.is_valid():
             return jsonify({"error": form.errors[0]}), 400
 
-        result = db.session.execute(
-            text("SELECT * FROM users WHERE email = :email"),
-            {"email": form.email}
-        ).mappings().first()
+        user = User.get_by_email(form.email)
 
-        if result is None:
+        if not user:
             return jsonify({"error": "Email is not registered."}), 404
 
-        if not check_password_hash(result["user_password"], form.password):
+        if not user.check_password(form.password):
             return jsonify({"error": "Incorrect password."}), 401
 
-        access_token = create_access_token(identity=str(result["userID"])) 
+        access_token = create_access_token(identity=str(user.userid))
         response = jsonify({"message": "Login successful"})
         set_access_cookies(response, access_token)
         return response, 200
@@ -50,28 +48,16 @@ def login():
 
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
-    form = SignUpForm(request.get_json())
+    data = request.get_json()
+    form = SignUpForm(data)
     if not form.is_valid():
         return jsonify({"error": form.errors[0]}), 400
 
-    existing = db.session.execute(
-        text("SELECT 1 FROM users WHERE email = :email OR username = :username"),
-        {"email": form.email, "username": form.username}
-    ).first()
-
-    if existing:
+    if User.exists(form.email, form.username):
         return jsonify({"error": "Email or username already exists."}), 409
 
-    hashed_pw = generate_password_hash(form.password)
-
-    db.session.execute(
-        text("""
-            INSERT INTO users (username, email, user_password)
-            VALUES (:username, :email, :password)
-        """),
-        {"username": form.username, "email": form.email, "password": hashed_pw}
-    )
-    db.session.commit()
+    new_user = User(username=form.username, email=form.email)
+    new_user.add(form.password)
 
     return jsonify({"message": "User registered successfully."}), 201
 
@@ -81,21 +67,16 @@ def signup():
 def ping():
     try:
         user_id = get_jwt_identity()
+        user = User.get_by_id(user_id)
 
-        result = db.session.execute(
-            text('SELECT "userID", username, email FROM users WHERE "userID" = :id'),
-            {"id": user_id}
-        ).mappings().first()
-
-
-        if not result:
+        if not user:
             return jsonify({"error": "User not found"}), 404
 
         return jsonify({
             "user_id": user_id,
             "user": {
-                "name": result["username"],
-                "email": result["email"]
+                "name": user.username,
+                "email": user.email
             }
         }), 200
     except Exception as e:

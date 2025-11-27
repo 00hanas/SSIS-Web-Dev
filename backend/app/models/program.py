@@ -36,6 +36,14 @@ class Program:
         db.commit()
         cursor.close()
 
+    def delete_with_student_update(self):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("UPDATE student SET programCode = NULL WHERE programCode = %s", (self.programCode,))
+        cursor.execute("DELETE FROM program WHERE programcode = %s", (self.programCode,))
+        db.commit()
+        cursor.close()
+
     @classmethod
     def get(cls, programCode):
         db = get_db()
@@ -71,3 +79,12 @@ class Program:
         rows = cursor.fetchall()
         cursor.close()
         return [cls(*row) for row in rows]
+    
+    @classmethod
+    def total(cls):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM program")
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return total

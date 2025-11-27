@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -46,6 +46,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     const loadPrograms = async () => {
@@ -80,6 +81,25 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
       return
     }
 
+    if (photoFile) {
+      if (
+        !["image/jpg", "image/jpeg", "image/png", "image/svg+xml"].includes(
+          photoFile.type
+        )
+      ) {
+        setErrorMessage("Only image files are allowed.")
+        if (fileInputRef.current) fileInputRef.current.value = ""
+        return
+      }
+
+      const maxSize = 2 * 1024 * 1024
+      if (photoFile.size > maxSize) {
+        setErrorMessage("Photo must be smaller than 2 MB.")
+        if (fileInputRef.current) fileInputRef.current.value = ""
+        return
+      }
+    }
+
     try {
       let uploadedPhotoUrl = "/student-icon.jpg"
 
@@ -106,7 +126,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
         programCode,
         parseInt(yearLevel),
         gender,
-        uploadedPhotoUrl
+        uploadedPhotoUrl || "/student-icon.jpg"
       )
 
       setAddedStudent(response.student)
@@ -167,6 +187,61 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="flex flex-col items-center gap-4">
+              <Label htmlFor="photo">Photo (optional)</Label>
+              <div className="relative flex items-center justify-center">
+                {photoUrl ? (
+                  <Image
+                    src={photoUrl}
+                    alt="Preview"
+                    width={120}
+                    height={120}
+                    className="!h-20 !w-20 rounded-full border border-gray-300 object-cover"
+                  />
+                ) : (
+                  <div className="flex !h-20 !w-20 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                    <span className="text-3xl font-bold">+</span>
+                  </div>
+                )}
+                {photoUrl && (
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => {
+                      setPhotoFile(null)
+                      setPhotoUrl(null)
+                      if (fileInputRef.current) fileInputRef.current.value = ""
+                    }}
+                    className="absolute -top-2 -right-2 !h-5 !w-5 rounded-full bg-red-500 text-white hover:bg-red-600"
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2"
+              >
+                {photoUrl ? "Change Photo" : "Upload Photo"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                id="photo"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setPhotoFile(file)
+                  if (file) {
+                    const previewUrl = URL.createObjectURL(file)
+                    setPhotoUrl(previewUrl)
+                  }
+                }}
+              />
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="studentID">Student ID</Label>
               <Input
@@ -249,34 +324,7 @@ export function AddStudentDialog({ onStudentAdded }: AddStudentDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="photo">Photo (optional)</Label>
-              {photoUrl && (
-                <div className="mt-2">
-                  <Image
-                    src={photoUrl}
-                    alt="Preview"
-                    width={75}
-                    height={75}
-                    className="!h-15 !w-15 rounded-full object-cover"
-                  />
-                </div>
-              )}
-              <Input
-                id="photo"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null
-                  setPhotoFile(file)
 
-                  if (file) {
-                    const previewUrl = URL.createObjectURL(file)
-                    setPhotoUrl(previewUrl)
-                  }
-                }}
-              />
-            </div>
             {errorMessage && (
               <p className="mt-2 text-sm text-red-600">{errorMessage}</p>
             )}

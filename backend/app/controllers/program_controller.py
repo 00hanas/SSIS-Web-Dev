@@ -68,12 +68,7 @@ def delete_program(programCode):
         return jsonify({"error": "Program not found"}), 404
     
     try:
-        db = get_db()
-        cursor = db.cursor()
-
-        cursor.execute("UPDATE student SET programCode = NULL WHERE programCode = %s", (programCode,))
-        program.delete()
-
+        program.delete_with_student_update()
         print(f"[DELETE] User {current_user_id} deleted program {programCode}")
         return jsonify({'message': f'Program {programCode} deleted and students updated.'}), 200
     except Exception as e:
@@ -88,18 +83,8 @@ def list_programs():
         current_user_id = get_jwt_identity()
         print("Authenticated user:", current_user_id)
 
-        db = get_db()
-        cursor = db.cursor()
-
-        cursor.execute("SELECT programcode, programname, collegecode FROM program")
-        rows = cursor.fetchall()
-
-        programs = [Program(programcode, programname, collegecode).serialize() for programcode, programname, collegecode in rows]
-
-        return jsonify({
-            'programs': programs
-        })
-
+        programs = [p.serialize() for p in Program.all()]
+        return jsonify({'programs': programs}), 200
     except Exception as e:
         print("🔥 Error in list_programs:", str(e))
         return jsonify({"error": "Internal server error"}), 500
@@ -118,12 +103,8 @@ def list_program_for_dropdown():
 @jwt_required()
 def get_total_programs():
     try:
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM program")
-        total = cursor.fetchone()[0]
-        cursor.close()
-        return jsonify({ "total": total }), 200
+        total = Program.total()
+        return jsonify({"total": total}), 200
     except Exception as e:
         print("🔥 Error in get_total_programs:", str(e))
-        return jsonify({ "error": "Internal server error" }), 500
+        return jsonify({"error": "Internal server error"}), 500

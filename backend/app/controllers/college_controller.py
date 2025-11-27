@@ -68,16 +68,12 @@ def delete_college(collegeCode):
         return jsonify({"error": "College not found"}), 404
 
     try:
-        db = get_db()
-        cursor = db.cursor()
-
-        cursor.execute("UPDATE program SET collegeCode = NULL WHERE collegeCode = %s", (collegeCode,))
-        college.delete()
-
+        college.delete_with_program_update()
         print(f"[DELETE] User {current_user_id} deleted college {collegeCode}")
         return jsonify({'message': f'College {collegeCode} deleted and programs updated.'}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 #list
 @college_bp.route('', methods=['GET'])
@@ -87,22 +83,12 @@ def list_colleges():
         current_user_id = get_jwt_identity()
         print("Authenticated user:", current_user_id)
 
-        db = get_db()
-        cursor = db.cursor()
-
-        cursor.execute("SELECT collegecode, collegename FROM college")
-        rows = cursor.fetchall()
-
-        colleges = [College(code, name).serialize() for code, name in rows]
-
-        return jsonify({
-            'colleges': colleges
-        })
+        colleges = [c.serialize() for c in College.all()]
+        return jsonify({'colleges': colleges}), 200
 
     except Exception as e:
         print("🔥 Error in list_colleges:", str(e))
         return jsonify({"error": "Internal server error"}), 500
-
 
 
 # Dropdown
@@ -119,13 +105,9 @@ def list_colleges_for_dropdown():
 @jwt_required()
 def get_total_colleges():
     try:
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM college")
-        total = cursor.fetchone()[0]
-        cursor.close()
-        return jsonify({ "total": total }), 200
+        total = College.total()
+        return jsonify({"total": total}), 200
     except Exception as e:
         print("🔥 Error in get_total_colleges:", str(e))
-        return jsonify({ "error": "Internal server error" }), 500
+        return jsonify({"error": "Internal server error"}), 500
 
