@@ -29,7 +29,6 @@ import {
   updateStudentAssets,
 } from "@/lib/api/student-api"
 import { EntityConfirmationDialog } from "@/components/global/entity-confirmation-dialog"
-import { supabase } from "@/lib/supabase/client"
 import Image from "next/image"
 
 type EditStudentDialogProps = {

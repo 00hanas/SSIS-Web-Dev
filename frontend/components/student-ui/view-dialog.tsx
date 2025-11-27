@@ -1,12 +1,6 @@
 import { fetchStudent } from "@/lib/api/student-api"
 import { useEffect, useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
 import Image from "next/image"
 import { Badge } from "../ui/badge"
 import { fetchProgramsForDropdown } from "@/lib/api/program-api"
