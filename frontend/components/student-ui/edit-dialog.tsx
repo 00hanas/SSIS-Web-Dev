@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,6 +27,7 @@ import {
   fetchStudent,
   updateStudent,
   updateStudentAssets,
+  deleteStudentPhoto,
 } from "@/lib/api/student-api"
 import { EntityConfirmationDialog } from "@/components/global/entity-confirmation-dialog"
 import Image from "next/image"
@@ -63,6 +64,7 @@ export function EditStudentDialog({
   const [errorMessage, setErrorMessage] = useState("")
   const [photoUrl, setPhotoUrl] = useState(student.photoUrl)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (visible) {
@@ -150,11 +152,28 @@ export function EditStudentDialog({
       return
     }
 
+    if (photoFile) {
+      if (
+        !["image/jpg", "image/jpeg", "image/png", "image/svg+xml"].includes(
+          photoFile.type
+        )
+      ) {
+        setErrorMessage("Only image files are allowed.")
+        return
+      }
+
+      const maxSize = 2 * 1024 * 1024
+      if (photoFile.size > maxSize) {
+        setErrorMessage("Photo must be smaller than 2 MB.")
+        if (fileInputRef.current) fileInputRef.current.value = ""
+        return
+      }
+    }
+
     try {
-      let uploadedPhotoUrl = photoUrl || student.photoUrl || "/student-icon.jpg"
+      let uploadedPhotoUrl = photoUrl || "/student-icon.jpg"
 
       if (photoFile) {
-        // ALWAYS upload the new photo
         const newUrl = await updateStudentAssets(
           originalId,
           studentID.trim(),
@@ -162,9 +181,15 @@ export function EditStudentDialog({
         )
         if (newUrl) uploadedPhotoUrl = newUrl
       } else if (originalId !== studentID.trim()) {
-        // ID changed but no new photo — so move existing photo
         const newUrl = await updateStudentAssets(originalId, studentID.trim())
         if (newUrl) uploadedPhotoUrl = newUrl
+      } else if (
+        photoUrl === "/student-icon.jpg" &&
+        student.photoUrl &&
+        student.photoUrl !== "/student-icon.jpg"
+      ) {
+        await deleteStudentPhoto(originalId, student.photoUrl)
+        uploadedPhotoUrl = "/student-icon.jpg"
       }
 
       const response = await updateStudent(
@@ -222,6 +247,66 @@ export function EditStudentDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="flex flex-col items-center gap-4">
+              <Label htmlFor="photo">Photo (optional)</Label>
+              <div className="relative flex items-center justify-center">
+                {photoUrl && photoUrl !== "/student-icon.jpg" ? (
+                  <Image
+                    src={photoUrl}
+                    alt="Current student photo"
+                    width={120}
+                    height={120}
+                    className="!h-20 !w-20 rounded-full border border-gray-300 object-cover"
+                  />
+                ) : (
+                  <div
+                    className="flex !h-20 !w-20 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <span className="text-3xl font-bold">+</span>
+                  </div>
+                )}
+
+                {photoUrl && photoUrl !== "/student-icon.jpg" && (
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => {
+                      setPhotoFile(null)
+                      setPhotoUrl("/student-icon.jpg")
+                      if (fileInputRef.current) fileInputRef.current.value = ""
+                    }}
+                    className="absolute -top-2 -right-2 !h-5 !w-5 rounded-full bg-red-500 text-white hover:bg-red-600"
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2"
+              >
+                {photoUrl && photoUrl !== "/student-icon.jpg"
+                  ? "Change Photo"
+                  : "Upload Photo"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                id="photo"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setPhotoFile(file)
+                  if (file) {
+                    const previewUrl = URL.createObjectURL(file)
+                    setPhotoUrl(previewUrl)
+                  }
+                }}
+              />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="studentID">Student ID</Label>
               <Input
@@ -305,34 +390,6 @@ export function EditStudentDialog({
                   <SelectItem value="Male">Male</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="photo">Photo (optional)</Label>
-              <div className="flex flex-col gap-2">
-                {photoUrl && photoUrl !== "/student-icon.jpg" && (
-                  <Image
-                    src={photoUrl}
-                    alt="Current student photo"
-                    width={75}
-                    height={75}
-                    className="!h-15 !w-15 rounded-full object-cover"
-                  />
-                )}
-                <Input
-                  id="photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null
-                    setPhotoFile(file)
-
-                    if (file) {
-                      const previewUrl = URL.createObjectURL(file)
-                      setPhotoUrl(previewUrl)
-                    }
-                  }}
-                />
-              </div>
             </div>
             {errorMessage && (
               <div className="text-sm text-red-600">{errorMessage}</div>

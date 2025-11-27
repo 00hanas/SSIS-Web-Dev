@@ -52,6 +52,17 @@ class College:
         db.commit()
         cursor.close()
 
+    def delete_with_program_update(self):
+        """Detach programs from this college, then delete the college itself."""
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("UPDATE program SET collegeCode = NULL WHERE collegeCode = %s", (self.collegeCode,))
+
+        cursor.execute("DELETE FROM college WHERE collegecode = %s", (self.collegeCode,))
+        db.commit()
+        cursor.close()
+
     @classmethod
     def all(cls):
         db = get_db()
@@ -60,3 +71,12 @@ class College:
         rows = cursor.fetchall()
         cursor.close()
         return [cls(*row) for row in rows]
+    
+    @classmethod
+    def total(cls):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM college")
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return total

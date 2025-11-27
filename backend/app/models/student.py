@@ -109,3 +109,12 @@ class Student():
         cursor.close()
         return rows
 
+    @classmethod
+    def total(cls):
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM student")
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return total
+

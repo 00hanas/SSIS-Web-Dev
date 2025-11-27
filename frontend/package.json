@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 127.0.0.1 -p 3000",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "copy:static": "xcopy /E /Y out\\_next \"../backend/app/static/_next\" && xcopy /E /Y out\\assets \"../backend/app/static/assets\"",
+    "copy:templates": "xcopy /E /Y out \"../backend/app/templates\" /EXCLUDE:exclude.txt",
+    "build:full": "npm run build && npm run copy:static && npm run copy:templates"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

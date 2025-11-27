@@ -219,6 +219,7 @@ export async function updateStudentAssets(
 ): Promise<string | null> {
   let newPhotoUrl: string | null = null
 
+  // If ID changed, move existing files
   if (oldID !== newID) {
     const { data, error } = await supabase.storage
       .from("students-photos")
@@ -244,9 +245,20 @@ export async function updateStudentAssets(
     }
   }
 
+  // If a new photo is provided, delete old ones first
   if (newPhotoFile) {
-    const filePath = `${newID}/${Date.now()}-${newPhotoFile.name}`
+    // Delete all existing files under newID folder
+    const { data: oldFiles, error: listError } = await supabase.storage
+      .from("students-photos")
+      .list(newID)
 
+    if (!listError && oldFiles && oldFiles.length > 0) {
+      const oldPaths = oldFiles.map((f) => `${newID}/${f.name}`)
+      await supabase.storage.from("students-photos").remove(oldPaths)
+    }
+
+    // Upload new photo
+    const filePath = `${newID}/${Date.now()}-${newPhotoFile.name}`
     const { error: uploadError } = await supabase.storage
       .from("students-photos")
       .upload(filePath, newPhotoFile, { upsert: true })
@@ -261,4 +273,22 @@ export async function updateStudentAssets(
   }
 
   return newPhotoUrl
+}
+
+export async function deleteStudentPhoto(studentId: string, photoUrl: string) {
+  try {
+    const urlParts = photoUrl.split("/students-photos/")
+    if (urlParts.length < 2) return false
+    const path = urlParts[1] // "2023-0001/photo.png"
+
+    const { error } = await supabase.storage
+      .from("students-photos")
+      .remove([path])
+
+    if (error) throw error
+    return true
+  } catch (err) {
+    console.error("Failed to delete photo:", err)
+    return false
+  }
 }

@@ -64,7 +64,7 @@ def update_student(studentID):
     if form.studentID.lower() != studentID.lower() and Student.exists(form.studentID):
         return jsonify({"error": "Student ID already exists"}), 409
     
-    photo_url = form.photoUrl if form.photoUrl else existing_student.photoUrl
+    photo_url = form.photoUrl if form.photoUrl not in [None, "", "null"] else "/student-icon.jpg"
 
     updated_student = Student(form.studentID, form.firstName, form.lastName, form.programCode, form.yearLevel, form.gender, photo_url)
     updated_student.update(studentID)
@@ -93,18 +93,8 @@ def list_students():
         current_user_id = get_jwt_identity()
         print("Authenticated user:", current_user_id)
 
-        db = get_db()
-        cursor = db.cursor()
-
-        cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender, photo_url FROM student")
-        rows = cursor.fetchall()
-
-        students = [Student(studentid, firstname, lastname, programcode, yearlevel, gender, photoUrl).serialize() for studentid, firstname, lastname, programcode, yearlevel, gender, photoUrl in rows]
-
-        return jsonify({
-            'students': students
-        })
-
+        students = [s.serialize() for s in Student.all()]
+        return jsonify({'students': students}), 200
 
     except Exception as e:
         print("🔥 Error in list_students:", str(e))
@@ -117,12 +107,7 @@ def get_students_by_program():
 
     try:
         if not program_code or program_code.lower() == "all":
-            db = get_db()
-            cursor = db.cursor()
-            cursor.execute("SELECT studentid, firstname, lastname, programcode, yearlevel, gender FROM student ORDER BY lastname")
-            rows = cursor.fetchall()
-            cursor.close()
-            students = [Student(*row).serialize() for row in rows]
+            students = [s.serialize() for s in Student.all()]
         else:
             students = [s.serialize() for s in Student.students_by_prog(program_code)]
 
@@ -161,13 +146,9 @@ def count_by_gender():
 @jwt_required()
 def get_total_students():
     try:
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM student")
-        total = cursor.fetchone()[0]
-        cursor.close()
-        return jsonify({ "total": total }), 200
+        total = Student.total()
+        return jsonify({"total": total}), 200
     except Exception as e:
-        print("🔥 Error in get_total_pstudents:", str(e))
-        return jsonify({ "error": "Internal server error" }), 500
+        print("🔥 Error in get_total_students:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
 

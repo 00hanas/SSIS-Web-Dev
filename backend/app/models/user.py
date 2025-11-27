@@ -2,15 +2,15 @@ from app.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User:
-    def __init__(self, userID=None, username=None, email=None, password_hash=None):
-        self.userID = userID
+    def __init__(self, userid=None, username=None, email=None, password_hash=None):
+        self.userid = userid
         self.username = username
         self.email = email
         self.password_hash = password_hash
 
     def serialize(self):
         return {
-            "userID": self.userID,
+            "userid": self.userid,
             "username": self.username,
             "email": self.email
         }
@@ -30,20 +30,20 @@ class User:
         sql = """
             INSERT INTO users (username, email, user_password)
             VALUES (%s, %s, %s)
-            RETURNING userID
+            RETURNING userid
         """
         cursor.execute(sql, (self.username, self.email, hashed_pw))
-        self.userID = cursor.fetchone()[0]
+        self.userid = cursor.fetchone()[0]
         db.commit()
         cursor.close()
-        return self.userID
+        return self.userid
 
     @classmethod
     def get_by_email(cls, email):
         """Fetch a user by email"""
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT userID, username, email, user_password FROM users WHERE email = %s", (email,))
+        cursor.execute("SELECT userid, username, email, user_password FROM users WHERE email = %s", (email,))
         row = cursor.fetchone()
         cursor.close()
         return cls(*row) if row else None
@@ -53,7 +53,7 @@ class User:
         """Fetch a user by ID"""
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT userID, username, email, user_password FROM users WHERE userID = %s", (user_id,))
+        cursor.execute("SELECT userid, username, email, user_password FROM users WHERE userid = %s", (user_id,))
         row = cursor.fetchone()
         cursor.close()
         return cls(*row) if row else None
@@ -76,7 +76,7 @@ class User:
         """Fetch all users"""
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT userID, username, email, user_password FROM users ORDER BY username")
+        cursor.execute("SELECT userid, username, email, user_password FROM users ORDER BY username")
         rows = cursor.fetchall()
         cursor.close()
         return [cls(*row) for row in rows]
