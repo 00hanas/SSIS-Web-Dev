@@ -22,6 +22,11 @@ import { SearchInput } from "@/components/global/search-input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ViewStudentDialog } from "@/components/student-ui/view-dialog"
 import { fetchStudentsFiltered } from "@/lib/api/student-api"
+import {
+  FilterDropdown,
+  Filters,
+} from "@/components/student-ui/filter-dropdown"
+import { fetchProgramsForDropdown } from "@/lib/api/program-api"
 
 export default function StudentsPage() {
   const { authenticated, loading } = useAuth()
@@ -52,6 +57,12 @@ export default function StudentsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [programCodes, setProgramCodes] = useState<string[]>([])
+  const [filters, setFilters] = useState<Filters>({
+    yearLevels: [],
+    genders: [],
+    programCodes: [],
+  })
 
   const openEditDialog = (student: Student) => {
     setSelectedStudent(student)
@@ -64,13 +75,20 @@ export default function StudentsPage() {
   const fetchStudents = useCallback(async () => {
     setIsLoading(true)
     try {
+      const transformedFilters = {
+        programCode: filters.programCodes,
+        gender: filters.genders,
+        yearLevel: filters.yearLevels,
+      }
+
       const data = await fetchStudentsFiltered(
         page,
         10,
         search,
         searchBy,
         sortBy,
-        sortOrder
+        sortOrder,
+        transformedFilters
       )
       setStudents(data.students)
       setTotalPages(data.pages)
@@ -80,13 +98,32 @@ export default function StudentsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [page, search, searchBy, sortBy, sortOrder])
+  }, [page, search, searchBy, sortBy, sortOrder, filters])
+
+  const fetchProgramCodes = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const codes = (await fetchProgramsForDropdown()).map((p) => p.programCode)
+      setProgramCodes(codes)
+    } catch (error) {
+      console.error("Failed to fetch program codes:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (authenticated) {
+      fetchStudents()
+      fetchProgramCodes()
+    }
+  }, [authenticated, fetchStudents, fetchProgramCodes])
 
   useEffect(() => {
     if (authenticated) {
       fetchStudents()
     }
-  }, [authenticated, fetchStudents])
+  }, [filters])
 
   if (loading) {
     return <PageSkeleton />
@@ -154,6 +191,15 @@ export default function StudentsPage() {
               </SelectItem>
             </SelectContent>
           </Select>
+          <FilterDropdown
+            filters={filters}
+            setFilters={(updater) => setFilters((prev) => updater(prev))}
+            availableOptions={{
+              yearLevels: [1, 2, 3, 4, 5],
+              genders: ["Male", "Female"],
+              programCodes: programCodes,
+            }}
+          />
         </div>
         <div className="ml-auto">
           <AddStudentDialog onStudentAdded={fetchStudents} />

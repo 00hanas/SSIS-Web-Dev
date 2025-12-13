@@ -100,7 +100,7 @@ def list_students():
         print("🔥 Error in list_students:", str(e))
         return jsonify({"error": "Internal server error"}), 500
     
-#page display with search, sort, pagination
+#page display with search, sort, pagination and filters
 @student_bp.route('', methods=['GET'])
 @jwt_required()
 def list_students_filtered():
@@ -115,13 +115,20 @@ def list_students_filtered():
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 10))
 
+        program_codes = request.args.get('programCode', '').lower().split(',') if request.args.get('programCode') else []
+        genders = request.args.get('gender', '').lower().split(',') if request.args.get('gender') else []
+        year_levels = request.args.get('yearLevel', '').split(',') if request.args.get('programCode') else []
+
         students, total = Student.query(
             search=search,
             search_by=search_by,
             sort_by=sort_by,
             sort_order=sort_order,
             page=page,
-            page_size=per_page
+            page_size=per_page,
+            program_codes=program_codes,
+            genders=genders,
+            year_levels=year_levels
         )
 
         pages = (total + per_page - 1) // per_page

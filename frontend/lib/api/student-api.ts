@@ -38,22 +38,32 @@ export const fetchStudentsFiltered = async (
     | "programCode"
     | "yearLevel"
     | "gender" = "studentID",
-  order: "asc" | "desc" = "asc"
+  order: "asc" | "desc" = "asc",
+  filters: {
+    programCode?: string[]
+    gender?: string[]
+    yearLevel?: number[]
+  } = {}
 ): Promise<{
   students: Student[]
   total: number
   pages: number
   current_page: number
 }> => {
-  const safeSearchBy = searchBy === "all" ? "all" : searchBy
   const params = new URLSearchParams({
     page: page.toString(),
     per_page: perPage.toString(),
     search,
-    searchBy: safeSearchBy,
+    searchBy,
     sortBy,
     order,
   })
+
+  if (filters.programCode?.length)
+    params.append("programCode", filters.programCode.join(","))
+  if (filters.gender?.length) params.append("gender", filters.gender.join(","))
+  if (filters.yearLevel?.length)
+    params.append("yearLevel", filters.yearLevel.join(","))
 
   const res = await fetch(`${BASE_URL}?${params.toString()}`, {
     method: "GET",
@@ -64,7 +74,6 @@ export const fetchStudentsFiltered = async (
   })
 
   const data = await res.json()
-  console.log("Total students:", data.total)
   return data
 }
 
